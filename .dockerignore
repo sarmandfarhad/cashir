@@ -1,0 +1,12 @@
+/node_modules
+/vendor
+/public/build
+/database/database.sqlite
+.env
+.git
+.github
+Dockerfile
+.dockerignore
+npm-debug.log
+yarn-error.log
+.phpunit.result.cache
