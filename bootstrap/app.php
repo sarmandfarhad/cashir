@@ -22,7 +22,27 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })->create();
 
 if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
-    $app->useStoragePath('/tmp/storage');
+    $storagePath = '/tmp/storage';
+    $app->useStoragePath($storagePath);
+    
+    // Override bootstrap/cache path
+    $app->useBootstrapPath('/tmp/bootstrap');
+
+    $directories = [
+        "{$storagePath}/app",
+        "{$storagePath}/framework/cache/data",
+        "{$storagePath}/framework/sessions",
+        "{$storagePath}/framework/testing",
+        "{$storagePath}/framework/views",
+        "{$storagePath}/logs",
+        "/tmp/bootstrap/cache"
+    ];
+
+    foreach ($directories as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+    }
 }
 
 return $app;
