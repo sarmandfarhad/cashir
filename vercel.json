@@ -22,12 +22,15 @@
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
+        "APP_KEY": "base64:A0+jmx7wBuUxdPoooHu4BhL8HZZ4NGDmTD3eYK43pHI=",
         "APP_URL": "https://cashir.vercel.app",
-        "CACHE_DRIVER": "array",
+        "LOG_CHANNEL": "stderr",
+        "CACHE_STORE": "array",
         "SESSION_DRIVER": "cookie",
-        "QUEUE_DRIVER": "sync",
-        "VIEW_COMPILED_PATH": "/tmp",
-        "SESSION_SECURE_COOKIE": "true"
+        "QUEUE_CONNECTION": "sync",
+        "DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:",
+        "VIEW_COMPILED_PATH": "/tmp"
     }
 }
