@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Cashier ERP</title>
     <style>
         :root {
@@ -844,17 +845,41 @@
                 width: 100%;
             }
         }
+
+        /* ── Toast Notification ─────────────────── */
+        .toast-container {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 16px 36px rgba(18,36,74,0.1);
+            min-width: 260px;
+            animation: slideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .toast.success { border-left: 4px solid #1f9d66; }
+        .toast.error   { border-left: 4px solid #cb4d4d; }
+        .toast-icon    { font-size: 20px; flex-shrink: 0; }
+        .toast p       { margin: 0; color: #182235; }
+        .toast span    { display: block; font-size: 11px; color: #71809a; font-weight: 400; margin-top: 1px; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
     </style>
 </head>
 <body>
-    @php
-        // Use $products passed from controller instead of overwriting here.
-        // We will seed the initial mock orders referencing default inventory products.
-        $orders = [
-            ['item' => 'Basic T-shirt', 'qty' => 1, 'price' => 25000, 'sku' => 'TS-001', 'category' => 'T-shirt', 'size' => '-', 'color' => '-'],
-            ['item' => 'Oversized T-shirt', 'qty' => 2, 'price' => 30000, 'sku' => 'TS-002', 'category' => 'T-shirt', 'size' => '-', 'color' => '-'],
-        ];
-    @endphp
+
 
     <div class="app">
         <aside class="sidebar">
@@ -867,12 +892,11 @@
             </div>
 
             <nav class="nav" aria-label="Sidebar navigation">
-                <a class="active" href="#overview"><span class="icon">▣</span><span>POS / Cashier</span></a>
+                <a class="active" href="{{ route('dashboard') }}"><span class="icon">▣</span><span>POS / Cashier</span></a>
                 <a href="{{ route('inventory.index') }}"><span class="icon">▥</span><span>Inventory Management</span></a>
-                <a href="#catalog"><span class="icon">◷</span><span>Sales Menu</span></a>
-                <a href="#overview"><span class="icon">▤</span><span>Dashboard</span></a>
-                <a href="#summary"><span class="icon">▦</span><span>Reports</span></a>
-                <a href="#summary"><span class="icon">⚙</span><span>Setting</span></a>
+                <a href="{{ route('sales.index') }}"><span class="icon">◷</span><span>Sales Menu</span></a>
+                <a href="{{ route('dashboard') }}"><span class="icon">▤</span><span>Dashboard</span></a>
+                <a href="{{ route('dashboard') }}"><span class="icon">⚙</span><span>Setting</span></a>
             </nav>
 
             <div class="sidebar-footer">
@@ -1061,11 +1085,33 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <script>
         (() => {
-            const products = @json($products);
-            const initialCart = @json($orders);
+            'use strict';
+            
+            /* ─── Utility: show toast notification ───────── */
+            function showToast(type, title, subtitle = '') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                const icon = type === 'success' ? '✅' : '❌';
+                toast.innerHTML = `
+                    <span class="toast-icon">${icon}</span>
+                    <p>${title}${subtitle ? `<span>${subtitle}</span>` : ''}</p>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.4s, transform 0.4s';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(() => toast.remove(), 450);
+                }, 3500);
+            }
 
+            const products = @json($products);
             const currency = (value) => 'IQD ' + Number(value || 0).toLocaleString('en-US').replace(/,/g, '.');
 
             const cartItemsElement = document.getElementById('cart-items');
@@ -1105,28 +1151,7 @@
                 qty: Number(item.qty || 1),
             });
 
-            const seedInitialCart = () => {
-                const fallback = [
-                    { name: 'Essential T-shirt', sku: 'TS-101', category: 'T-shirt', size: 'M', color: 'black', price: 8000, qty: 1 },
-                    { name: 'Slim Jeans', sku: 'JN-201', category: 'Jeans', size: '32', color: 'blue', price: 17000, qty: 2 },
-                ];
 
-                const source = Array.isArray(initialCart) && initialCart.length
-                    ? initialCart.map((item) => ({
-                        name: item.item || item.name,
-                        sku: item.sku || item.item || item.name,
-                        category: item.category || 'T-shirt',
-                        size: item.size || '-',
-                        color: item.color || '-',
-                        price: Number(item.price || 0),
-                        qty: Number(item.qty || 1),
-                    }))
-                    : fallback;
-
-                source.forEach((item) => {
-                    cart.set(item.sku, normalizeItem(item));
-                });
-            };
 
             const getDiscountValue = (subtotal) => {
                 const rawValue = Number(discountValueElement.value || 0);
@@ -1249,22 +1274,54 @@
                 changeDueElement.textContent = currency(change);
             }
 
-            const finalizePayment = (message) => {
+            const finalizePayment = async (message) => {
                 if (!cart.size) {
                     return;
                 }
 
-                alert(message || `Payment completed with ${activePaymentMethod}. Total: ${totalAmountElement.textContent}`);
-                cart.clear();
-                discountValueElement.value = 0;
-                discountTypeElement.value = '%';
-                amountPaidElement.value = 0;
-                setActivePaymentMethod('Cash');
-                renderCart();
-                closePaymentModal();
+                const items = Array.from(cart.values());
+                const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+                const discountValue = getDiscountValue(subtotal);
+                const total = Math.max(0, subtotal - discountValue);
+                const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
+
+                try {
+                    const response = await fetch('{{ route('sales.save') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        },
+                        body: JSON.stringify({
+                            total_items: totalItems,
+                            total_payment: total,
+                            payment_method: activePaymentMethod.toLowerCase(),
+                            items: items
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('success', message || 'Payment completed', `Total: ${currency(total)}`);
+                        
+                        // Clear cart
+                        cart.clear();
+                        discountValueElement.value = 0;
+                        discountTypeElement.value = '%';
+                        amountPaidElement.value = 0;
+                        setActivePaymentMethod('Cash');
+                        renderCart();
+                        closePaymentModal();
+                    } else {
+                        showToast('error', 'Failed to save transaction', data.message || 'Unknown error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('error', 'Error saving transaction', err.message);
+                }
             };
 
-            seedInitialCart();
+
             renderCart();
             setActivePaymentMethod('Cash');
             updateProductVisibility();

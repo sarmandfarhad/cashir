@@ -34,7 +34,7 @@
         .sidebar {
             background: var(--panel);
             border-right: 1px solid var(--line);
-            padding: 18px 12px;
+            padding: 18px 14px;
             display: flex;
             flex-direction: column;
         }
@@ -42,47 +42,52 @@
         .brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 10px 14px;
+            gap: 12px;
+            padding: 8px 10px 16px;
             border-bottom: 1px solid #edf2fb;
         }
 
-        .mark {
-            width: 28px;
-            height: 28px;
+        .brand-mark {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            background: var(--blue);
+            background: linear-gradient(135deg, var(--blue), var(--blue-deep));
             color: #fff;
             display: grid;
             place-items: center;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
         }
 
-        .brand strong,
-        .brand span {
+        .brand-copy strong,
+        .brand-copy span {
             display: block;
             line-height: 1.15;
         }
 
-        .brand strong { font-size: 13px; }
-        .brand span { font-size: 10px; color: var(--muted); margin-top: 3px; }
+        .brand-copy strong { font-size: 14px; }
+        .brand-copy span { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
         .nav {
             display: grid;
             gap: 8px;
-            margin-top: 16px;
+            padding: 16px 2px 0;
         }
 
         .nav a {
-            text-decoration: none;
-            color: var(--text);
-            font-size: 12px;
-            border-radius: 10px;
-            padding: 10px 12px;
+            width: 100%;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            border: 0;
+            background: transparent;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 13px;
+            border-radius: 10px;
+            padding: 11px 14px;
+            cursor: pointer;
+            text-align: left;
         }
 
         .nav a.active {
@@ -91,19 +96,30 @@
             font-weight: 700;
         }
 
-        .logout-wrap {
-            margin-top: auto;
-            border-top: 1px solid #edf2fb;
-            padding-top: 12px;
+        .nav .icon {
+            width: 18px;
+            text-align: center;
+            opacity: 0.9;
         }
 
-        .logout-wrap button {
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid #edf2fb;
+            padding-top: 14px;
+        }
+
+        .logout {
             border: 0;
             background: transparent;
             color: var(--red);
-            font-size: 12px;
-            padding: 8px 10px;
+            font-size: 13px;
+            padding: 11px 14px;
             cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
         }
 
         .main {
@@ -196,26 +212,28 @@
     <div class="app">
         <aside class="sidebar">
             <div class="brand">
-                <div class="mark">P</div>
-                <div>
+                <div class="brand-mark">P</div>
+                <div class="brand-copy">
                     <strong>Pos System</strong>
                     <span>System Cashier</span>
                 </div>
             </div>
 
-            <nav class="nav" aria-label="Main navigation">
-                <a href="{{ route('dashboard') }}">POS / Cashier</a>
-                <a class="active" href="{{ route('inventory.index') }}">Inventory Management</a>
-                <a href="{{ route('dashboard') }}">Sales Menu</a>
-                <a href="{{ route('dashboard') }}">Dashboard</a>
-                <a href="{{ route('dashboard') }}">Reports</a>
-                <a href="{{ route('dashboard') }}">Setting</a>
+            <nav class="nav" aria-label="Sidebar navigation">
+                <a href="{{ route('dashboard') }}"><span class="icon">▣</span><span>POS / Cashier</span></a>
+                <a class="active" href="{{ route('inventory.index') }}"><span class="icon">▥</span><span>Inventory Management</span></a>
+                <a href="{{ route('sales.index') }}"><span class="icon">◷</span><span>Sales Menu</span></a>
+                <a href="{{ route('dashboard') }}"><span class="icon">▤</span><span>Dashboard</span></a>
+                <a href="{{ route('dashboard') }}"><span class="icon">⚙</span><span>Setting</span></a>
             </nav>
 
-            <div class="logout-wrap">
+            <div class="sidebar-footer">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit">Logout</button>
+                    <button class="logout" type="submit">
+                        <span class="icon">⇦</span>
+                        <span>Logout</span>
+                    </button>
                 </form>
             </div>
         </aside>
