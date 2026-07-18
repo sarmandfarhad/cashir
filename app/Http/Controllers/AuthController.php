@@ -19,14 +19,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if ($credentials['email'] === 'admin@gmail.com') {
-            User::query()->updateOrCreate([
-                'email' => 'admin@gmail.com',
-            ], [
-                'name' => 'Admin',
-                'password' => '2244',
-            ]);
-        }
+
 
         $user = User::query()->whereEmail($credentials['email'])->first();
 

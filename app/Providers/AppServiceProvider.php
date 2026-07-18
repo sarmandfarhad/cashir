@@ -21,6 +21,13 @@ class AppServiceProvider extends ServiceProvider
     {
         if (config('database.default') === 'sqlite' && config('database.connections.sqlite.database') === ':memory:') {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            
+            \App\Models\User::firstOrCreate([
+                'email' => 'admin@gmail.com',
+            ], [
+                'name' => 'Admin',
+                'password' => '2244',
+            ]);
         }
     }
 }
