@@ -1286,7 +1286,7 @@
                 const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
 
                 try {
-                    const response = await fetch('{{ route('sales.save') }}', {
+                    const response = await fetch('/sales-menu/save', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

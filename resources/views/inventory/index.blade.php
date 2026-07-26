@@ -1886,7 +1886,7 @@ addProductForm.addEventListener('submit', async (e) => {
     const formData = new FormData(addProductForm);
 
     try {
-        const response = await fetch('{{ route('inventory.add') }}', {
+        const response = await fetch('/inventory-management/add', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
