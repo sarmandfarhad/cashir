@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
                 'email' => 'admin@gmail.com',
             ], [
                 'name' => 'Admin',
-                'password' => '2244',
+                'password' => env('ADMIN_PASSWORD', 'SecurePass123!'),
             ]);
         }
     }

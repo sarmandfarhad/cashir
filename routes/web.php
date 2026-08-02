@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\File;
 
 $inventoryProducts = [
     ['code' => 'TS-001', 'name' => 'Basic T-shirt', 'category' => 'T-shirt', 'variants' => '4 S + 3 C', 'stock' => 50, 'min_stock' => 20, 'price' => 25000],
@@ -122,7 +123,7 @@ $defaultTransactions = [
         'payment_method' => 'cash',
     ],
     [
-        'id' => 'TRX-2025-003',
+        'id' => 'TRX-2025-004',
         'date_time' => '01/06/2026 15:40',
         'cashier_name' => 'name4',
         'total_items' => 3,
@@ -130,7 +131,7 @@ $defaultTransactions = [
         'payment_method' => 'card',
     ],
     [
-        'id' => 'TRX-2025-003',
+        'id' => 'TRX-2025-005',
         'date_time' => '01/06/2026 19:00',
         'cashier_name' => 'name5',
         'total_items' => 5,
@@ -141,15 +142,23 @@ $defaultTransactions = [
 
 $getAllProducts = function () use ($inventoryProducts) {
     $sessionProducts = session('products', []);
-    $allProducts = array_merge($inventoryProducts, $sessionProducts);
-    
+    // Key products by code for merging
+    $productsByCode = [];
+    foreach ($inventoryProducts as $product) {
+        $productsByCode[$product['code']] = $product;
+    }
+    foreach ($sessionProducts as $product) {
+        $productsByCode[$product['code']] = $product;
+    }
+    $allProducts = array_values($productsByCode);
+
     $deductions = session('stock_deductions', []);
     foreach ($allProducts as &$product) {
         if (isset($deductions[$product['code']])) {
             $product['stock'] = max(0, $product['stock'] - $deductions[$product['code']]);
         }
     }
-    
+
     return $allProducts;
 };
 
@@ -183,11 +192,41 @@ Route::post('/inventory-management/add', function () use ($getAllProducts) {
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
+    $code = $validated['code'];
+    $duplicate = false;
+
+    // Check against inventory products
+    foreach ($inventoryProducts as $product) {
+        if ($product['code'] === $code) {
+            $duplicate = true;
+            break;
+        }
+    }
+
+    // If not found in inventory, check session products
+    if (!$duplicate) {
+        $sessionProducts = session('products', []);
+        foreach ($sessionProducts as $product) {
+            if ($product['code'] === $code) {
+                $duplicate = true;
+                break;
+            }
+        }
+    }
+
+    if ($duplicate) {
+        return response()->json(['error' => 'A product with this code already exists.'], 422);
+    }
+
     $imagePath = '';
     if (request()->hasFile('image')) {
         $image = request()->file('image');
         $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-        $image->move(public_path('images/products'), $filename);
+        $destinationPath = public_path('images/products');
+        if (!File::isDirectory($destinationPath)) {
+            File::makeDirectory($destinationPath, 0755, true);
+        }
+        $image->move($destinationPath, $filename);
         $imagePath = '/images/products/' . $filename;
     }
 
@@ -309,7 +348,7 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
 
     $allTransactions = $getAllTransactions();
     $nextIdNum = count($allTransactions) + 1;
-    $id = 'TRX-2026-' . str_pad($nextIdNum, 3, '0', STR_PAD_LEFT);
+    $id = 'TRX-' . now()->year . '-' . str_pad($nextIdNum, 3, '0', STR_PAD_LEFT);
 
     $newTransaction = [
         'id' => $id,
