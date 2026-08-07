@@ -383,3 +383,9 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
     return response()->json(['success' => true, 'transaction' => $newTransaction]);
 })->middleware('auth')->name('sales.save');
 
+Route::post('/locale', function (Request $request) {
+    $request->validate(['locale' => 'in:en,ar']);
+    session(['locale' => $request->locale]);
+    return back();
+})->name('locale.update');
+
