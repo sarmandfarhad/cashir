@@ -9,11 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Foundation\Auth\ThrottlesLogins;
 
 class AuthController extends Controller
 {
-    use ThrowsExceptions, ThrottlesLogins;
+
     public function login(Request $request): JsonResponse|RedirectResponse
     {
         $credentials = $request->validate([
@@ -21,11 +20,9 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-
-
         $user = User::query()->whereEmail($credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
