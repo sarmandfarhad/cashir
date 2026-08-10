@@ -27,7 +27,7 @@ test('cashier users are seeded and can login through the api', function (string 
             ],
         ]);
 })->with([
-    'Noor' => ['Noor', 'noor@gamil.com'],
+    'Noor' => ['Noor', 'noor@gmail.com'],
     'Yousef' => ['Yousef', 'yousef@gmail.com'],
 ]);
 
@@ -35,7 +35,7 @@ test('web login redirects to the dashboard', function () {
     $this->seed(DatabaseSeeder::class);
 
     $response = $this->post('/login', [
-        'email' => 'noor@gamil.com',
+        'email' => 'noor@gmail.com',
         'password' => '2244',
     ]);
 

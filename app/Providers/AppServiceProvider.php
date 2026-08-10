@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
 
             $users = [
-                ['name' => 'Noor', 'email' => 'noor@gamil.com'],
+                ['name' => 'Noor', 'email' => 'noor@gmail.com'],
                 ['name' => 'Yousef', 'email' => 'yousef@gmail.com'],
             ];
 
