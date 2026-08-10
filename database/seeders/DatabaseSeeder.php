@@ -15,11 +15,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::query()->updateOrCreate([
-            'email' => 'admin@gmail.com',
-        ], [
-            'name' => 'Admin',
-            'password' => '2244',
-        ]);
+        $users = [
+            [
+                'name' => 'Noor',
+                'email' => 'noor@gamil.com',
+            ],
+            [
+                'name' => 'Yousef',
+                'email' => 'yousef@gmail.com',
+            ],
+        ];
+
+        foreach ($users as $user) {
+            User::query()->updateOrCreate([
+                'email' => $user['email'],
+            ], [
+                'name' => $user['name'],
+                'password' => '2244',
+            ]);
+        }
     }
 }

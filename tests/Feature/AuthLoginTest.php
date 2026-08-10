@@ -5,15 +5,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('admin user is seeded and can login through the api', function () {
+test('cashier users are seeded and can login through the api', function (string $name, string $email) {
     $this->seed(DatabaseSeeder::class);
 
     $this->assertDatabaseHas('users', [
-        'email' => 'admin@gmail.com',
+        'name' => $name,
+        'email' => $email,
     ]);
 
     $response = $this->postJson('/api/login', [
-        'email' => 'admin@gmail.com',
+        'email' => $email,
         'password' => '2244',
     ]);
 
@@ -21,16 +22,20 @@ test('admin user is seeded and can login through the api', function () {
         ->assertJson([
             'message' => 'Login successful.',
             'user' => [
-                'email' => 'admin@gmail.com',
+                'name' => $name,
+                'email' => $email,
             ],
         ]);
-});
+})->with([
+    'Noor' => ['Noor', 'noor@gamil.com'],
+    'Yousef' => ['Yousef', 'yousef@gmail.com'],
+]);
 
 test('web login redirects to the dashboard', function () {
     $this->seed(DatabaseSeeder::class);
 
     $response = $this->post('/login', [
-        'email' => 'admin@gmail.com',
+        'email' => 'noor@gamil.com',
         'password' => '2244',
     ]);
 

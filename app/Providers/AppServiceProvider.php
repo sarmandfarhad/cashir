@@ -25,13 +25,20 @@ class AppServiceProvider extends ServiceProvider
 
         if (config('database.default') === 'sqlite' && config('database.connections.sqlite.database') === ':memory:') {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-            
-            \App\Models\User::firstOrCreate([
-                'email' => 'admin@gmail.com',
-            ], [
-                'name' => 'Admin',
-                'password' => '2244',
-            ]);
+
+            $users = [
+                ['name' => 'Noor', 'email' => 'noor@gamil.com'],
+                ['name' => 'Yousef', 'email' => 'yousef@gmail.com'],
+            ];
+
+            foreach ($users as $user) {
+                \App\Models\User::query()->updateOrCreate([
+                    'email' => $user['email'],
+                ], [
+                    'name' => $user['name'],
+                    'password' => '2244',
+                ]);
+            }
         }
     }
 }
