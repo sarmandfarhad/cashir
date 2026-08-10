@@ -8,7 +8,6 @@
 /.codex
 /.cursor/*
 !/.cursor/environment.json
-!/.cursor/Dockerfile
 !/.cursor/install.sh
 /.idea
 /.nova

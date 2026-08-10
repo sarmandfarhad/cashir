@@ -1,9 +1,5 @@
 {
     "name": "Cashir (Laravel POS)",
-    "user": "ubuntu",
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
     "install": "bash .cursor/install.sh",
     "terminals": [
         {
