@@ -129,49 +129,6 @@
         .title p  { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
 
         .actions { display: flex; gap: 10px; align-items: center; }
-
-        /* ── Head-meta / User Card ──────────────────── */
-        .head-meta {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .user-card {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            box-shadow: var(--shadow-md);
-            padding: 10px 12px;
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-card small {
-            display: block;
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .user-card strong {
-            display: block;
-            font-size: 12px;
-        }
-
-        .avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f5d0d8, #f8e3a8);
-            display: grid;
-            place-items: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: #182235;
-        }
         .btn {
             border: 1px solid var(--line);
             background: #fff;
@@ -1189,20 +1146,9 @@
                 <h1>Product List</h1>
                 <p>Manage Products &amp; Inventory</p>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;">
-                <div class="actions">
-                    <button class="btn" type="button">Export PDF</button>
-                    <button class="btn primary" type="button" id="add-product-btn">+ Add Product</button>
-                </div>
-                <div class="head-meta">
-                    <div class="user-card">
-                        <div class="avatar" aria-hidden="true">{{ mb_substr(auth()->user()->name ?? 'U', 0, 1) }}</div>
-                        <div>
-                            <small>Cashier</small>
-                            <strong>Hi {{ auth()->user()->name ?? 'User' }}</strong>
-                        </div>
-                    </div>
-                </div>
+            <div class="actions">
+                <button class="btn" type="button">Export PDF</button>
+                <button class="btn primary" type="button" id="add-product-btn">+ Add Product</button>
             </div>
         </div>
 

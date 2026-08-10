@@ -12,7 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-
     public function login(Request $request): JsonResponse|RedirectResponse
     {
         $credentials = $request->validate([
@@ -20,9 +19,11 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+
+
         $user = User::query()->whereEmail($credentials['email'])->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

@@ -21,19 +21,5 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin',
             'password' => '2244',
         ]);
-
-        User::query()->updateOrCreate([
-            'email' => 'noor@gmail.com',
-        ], [
-            'name' => 'Noor',
-            'password' => '2244',
-        ]);
-
-        User::query()->updateOrCreate([
-            'email' => 'yousef@gmail.com',
-        ], [
-            'name' => 'Yousef',
-            'password' => '2244',
-        ]);
     }
 }

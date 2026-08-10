@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('layout.brand') }}</title>
+    <title>Login</title>
     <style>
         :root {
             color-scheme: dark;
@@ -183,60 +183,6 @@
             text-align: left;
         }
 
-        /* Language Switcher */
-        .language-switcher {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 8px;
-            z-index: 1000;
-        }
-
-        .language-switcher button {
-            width: auto;
-            min-width: 60px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text);
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-        }
-
-        .language-switcher button.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Dark Mode Toggle */
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text);
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-        }
-
-        .theme-toggle.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
         @media (max-width: 640px) {
             .shell {
                 min-height: 520px;
@@ -249,56 +195,25 @@
             h1 {
                 font-size: 24px;
             }
-
-            .language-switcher {
-                top: 10px;
-                right: 10px;
-                gap: 4px;
-            }
-
-            .language-switcher button {
-                min-width: 50px;
-                padding: 6px 8px;
-                font-size: 10px;
-            }
-
-            .theme-toggle {
-                top: 10px;
-                left: 10px;
-                width: 35px;
-                height: 35px;
-                font-size: 14px;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- Dark Mode Toggle -->
-    <button class="theme-toggle" id="theme-toggle" aria-label="{{ __('navbar.theme') }}">
-        🌙
-    </button>
-
-    <!-- Language Switcher -->
-    <div class="language-switcher" id="language-switcher">
-        <button class="lang-en" data-lang="en">{{ __('navbar.english') }}</button>
-        <button class="lang-ar" data-lang="ar">{{ __('navbar.arabic') }}</button>
-    </div>
-
     <div class="shell">
         <div class="content">
             <form class="panel" method="POST" action="{{ route('login') }}">
                 @csrf
                 <div class="logo" aria-hidden="true"></div>
-                <h1>{{ __('auth.login') }}</h1>
+                <h1>Login</h1>
 
                 <label class="field">
                     <span>u</span>
-                    <input type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('auth.username') }}" autocomplete="email" required>
+                    <input type="email" name="email" value="{{ old('email') }}" placeholder="Username" autocomplete="email" required>
                 </label>
 
                 <label class="field">
                     <span>p</span>
-                    <input type="password" name="password" placeholder="{{ __('auth.password') }}" autocomplete="current-password" required>
+                    <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
                 </label>
 
                 @if ($errors->any())
@@ -306,91 +221,11 @@
                 @endif
 
                 <div class="actions">
-                    <button type="submit">{{ __('auth.login') }}</button>
-                    <div class="hint">{{ __('auth.forgotPassword') }}</div>
+                    <button type="submit">Login</button>
+                    <div class="hint">Forgot password?</div>
                 </div>
             </form>
         </div>
     </div>
-
-    <script>
-        (() => {
-            'use strict';
-
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('theme-toggle');
-            const htmlElement = document.documentElement;
-
-            // Check for saved theme preference or use system preference
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                if (savedTheme === 'dark') {
-                    htmlElement.classList.add('dark');
-                    themeToggle.textContent = '☀️';
-                } else {
-                    htmlElement.classList.remove('dark');
-                    themeToggle.textContent = '🌙';
-                }
-            } else {
-                // Check system preference
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    htmlElement.classList.add('dark');
-                    themeToggle.textContent = '☀️';
-                }
-            }
-
-            themeToggle.addEventListener('click', () => {
-                const isDark = htmlElement.classList.toggle('dark');
-                if (isDark) {
-                    themeToggle.textContent = '☀️';
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeToggle.textContent = '🌙';
-                    localStorage.setItem('theme', 'light');
-                }
-            });
-
-            // Language switcher functionality
-            const languageButtons = document.querySelectorAll('.language-switcher button');
-            const currentLanguage = localStorage.getItem('language') || 'en';
-
-            // Set initial active state
-            languageButtons.forEach(btn => {
-                if (btn.dataset.lang === currentLanguage) {
-                    btn.classList.add('active');
-                }
-
-                btn.addEventListener('click', () => {
-                    const lang = btn.dataset.lang;
-
-                    // Update active state
-                    languageButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    // Save preference
-                    localStorage.setItem('language', lang);
-
-                    // Send request to change language
-                    fetch('/locale', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                        },
-                        body: new URLSearchParams({ 'locale': lang })
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            // Reload page to apply new language
-                            location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error changing language:', error);
-                    });
-                });
-            });
-        })();
-    </script>
 </body>
 </html>

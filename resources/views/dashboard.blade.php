@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ __('layout.brand') }}</title>
+    <title>Cashier ERP</title>
     <style>
         :root {
             --bg: #f3f6fb;
@@ -213,11 +213,6 @@
             height: 30px;
             border-radius: 50%;
             background: linear-gradient(135deg, #f5d0d8, #f8e3a8);
-            display: grid;
-            place-items: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: #182235;
         }
 
         .catalog-card {
@@ -891,17 +886,17 @@
             <div class="brand">
                 <div class="brand-mark">P</div>
                 <div class="brand-copy">
-                    <strong>{{ __('layout.brandTitle') }}</strong>
-                    <span>{{ __('layout.brandTagline') }}</span>
+                    <strong>Pos System</strong>
+                    <span>System Cashier</span>
                 </div>
             </div>
 
             <nav class="nav" aria-label="Sidebar navigation">
-                <a class="active" href="{{ route('dashboard') }}"><span class="icon">▣</span><span>{{ __('navbar.posCashier') }}</span></a>
-                <a href="{{ route('inventory.index') }}"><span class="icon">▥</span><span>{{ __('navbar.inventoryManagement') }}</span></a>
-                <a href="{{ route('sales.index') }}"><span class="icon">◷</span><span>{{ __('navbar.salesMenu') }}</span></a>
-                <a href="{{ route('dashboard') }}"><span class="icon">▤</span><span>{{ __('navbar.dashboard') }}</span></a>
-                <a href="{{ route('dashboard') }}"><span class="icon">⚙</span><span>{{ __('navbar.setting') }}</span></a>
+                <a class="active" href="{{ route('dashboard') }}"><span class="icon">▣</span><span>POS / Cashier</span></a>
+                <a href="{{ route('inventory.index') }}"><span class="icon">▥</span><span>Inventory Management</span></a>
+                <a href="{{ route('sales.index') }}"><span class="icon">◷</span><span>Sales Menu</span></a>
+                <a href="{{ route('dashboard') }}"><span class="icon">▤</span><span>Dashboard</span></a>
+                <a href="{{ route('dashboard') }}"><span class="icon">⚙</span><span>Setting</span></a>
             </nav>
 
             <div class="sidebar-footer">
@@ -909,7 +904,7 @@
                     @csrf
                     <button class="logout" type="submit">
                         <span class="icon">⇦</span>
-                        <span>{{ __('navbar.logout') }}</span>
+                        <span>Logout</span>
                     </button>
                 </form>
             </div>
@@ -918,23 +913,23 @@
         <main class="workspace" id="overview">
             <div class="page-head">
                 <div class="title">
-                    <h1>{{ __('dashboard.cashier') }}</h1>
-                    <p>{{ __('dashboard.welcome') }}</p>
+                    <h1>Cashier</h1>
+                    <p>Store operations and product selection for apparel sales.</p>
                 </div>
 
                 <div class="head-meta">
                     <div class="meta-card">
                         <div class="meta-badge">⏱</div>
                         <div>
-                            <small>{{ __('dashboard.time') }}</small>
-                            <strong id="current-time">--:--:--</strong>
+                            <small>Time</small>
+                            <strong>15:07:14 WIB</strong>
                         </div>
                     </div>
                     <div class="user-card">
-                        <div class="avatar" aria-hidden="true">{{ mb_substr(auth()->user()->name ?? 'Shayda', 0, 1) }}</div>
+                        <div class="avatar" aria-hidden="true"></div>
                         <div>
-                            <small>{{ __('dashboard.cashier') }}</small>
-                            <strong>{{ __('dashboard.hi') }} {{ auth()->user()->name ?? 'Shayda' }}</strong>
+                            <small>Operator</small>
+                            <strong>{{ auth()->user()->name ?? 'Cashier' }}</strong>
                         </div>
                     </div>
                 </div>
@@ -942,13 +937,13 @@
 
             <section class="catalog-card" id="catalog">
                 <div class="catalog-tools">
-                    <label class="search" aria-label="{{ __('catalog.searchPlaceholder') }}">
+                    <label class="search" aria-label="Search products">
                         <span>⌕</span>
-                        <input id="product-search" type="search" placeholder="{{ __('catalog.searchPlaceholder') }}">
+                        <input id="product-search" type="search" placeholder="Search by product name, SKU, or category">
                     </label>
 
-                    <div class="filters" aria-label="{{ __('nav.inventoryManagement') }}">
-                        <button class="chip active" type="button" data-filter="all">{{ __('dashboard.allProducts') }}</button>
+                    <div class="filters" aria-label="Product categories">
+                        <button class="chip active" type="button" data-filter="all">All Products</button>
                         @php
                             $categories = [];
                             foreach ($products as $product) {
@@ -966,10 +961,10 @@
 
                 <div class="section-head">
                     <div>
-                        <h2>{{ __('dashboard.productCatalog') }}</h2>
-                        <span>{{ __('catalog.chooseClothing') }}</span>
+                        <h2>Product Catalog</h2>
+                        <span>Choose clothing items for the current sale.</span>
                     </div>
-                    <span>{{ count($products) }} {{ __('dashboard.allProducts') }}</span>
+                    <span>{{ count($products) }} items</span>
                 </div>
 
                 <div class="product-grid">
@@ -1003,20 +998,20 @@
 
         <aside class="summary" id="summary">
             <div class="summary-head">
-                <h2>{{ __('dashboard.checkoutSummary') }}</h2>
-                <span class="pill" id="cart-count">0 {{ __('dashboard.items') }}</span>
+                <h2>Checkout Summary</h2>
+                <span class="pill" id="cart-count">0 Item</span>
             </div>
 
-            <div id="cart-empty" class="empty-state">{{ __('summary.cartEmpty') }}</div>
+            <div id="cart-empty" class="empty-state">Cart is empty. Add items from the catalog to build a sale.</div>
             <div id="cart-items" class="cart-items"></div>
 
             <div class="summary-row">
-                <span>{{ __('summary.subTotal') }}</span>
+                <span>Sub total</span>
                 <strong id="sub-total">IQD 0</strong>
             </div>
 
             <div class="discount">
-                <label for="discount-value">{{ __('summary.discount') }}</label>
+                <label for="discount-value">Discount</label>
                 <div class="discount-controls">
                     <select id="discount-type">
                         <option>%</option>
@@ -1027,64 +1022,64 @@
             </div>
 
             <div class="total">
-                <label>{{ __('summary.totalAmount') }}</label>
+                <label>Total Amount</label>
                 <strong id="total-amount">IQD 0</strong>
             </div>
 
             <div class="payment-methods">
-                <label>{{ __('summary.paymentMethod') }}</label>
+                <label>Payment Method</label>
                 <div class="methods">
-                    <button class="method active" type="button" data-payment-method="Cash">{{ __('summary.cash') }}</button>
-                    <button class="method" type="button" data-payment-method="Mobile Pay">{{ __('summary.card') }}</button>
-                    <button class="method" type="button" data-payment-method="Card">{{ __('summary.card') }}</button>
+                    <button class="method active" type="button" data-payment-method="Cash">Cash</button>
+                    <button class="method" type="button" data-payment-method="Mobile Pay">Mobile Pay</button>
+                    <button class="method" type="button" data-payment-method="Card">Card</button>
                 </div>
             </div>
 
-            <button id="complete-payment" class="action-btn primary" type="button" disabled>{{ __('dashboard.completePayment') }}</button>
-            <button id="delete-cart" class="action-btn danger" type="button">{{ __('messages.delete') }}</button>
+            <button id="complete-payment" class="action-btn primary" type="button" disabled>Complete Payment</button>
+            <button id="delete-cart" class="action-btn danger" type="button">Delete</button>
         </aside>
     </div>
 
     <div id="payment-modal" class="modal-backdrop" aria-hidden="true">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title">
             <div class="modal-header">
-                <h3 id="payment-modal-title">{{ __('summary.checkoutSummary') }}</h3>
-                <button id="close-payment-modal" class="modal-close" type="button" aria-label="{{ __('messages.close') }}">×</button>
+                <h3 id="payment-modal-title">Payment</h3>
+                <button id="close-payment-modal" class="modal-close" type="button" aria-label="Close payment dialog">×</button>
             </div>
             <div class="modal-body">
-                <p class="modal-note">{{ __('summary.paymentNote') }}</p>
+                <p class="modal-note">Enter the amount received from the customer.</p>
 
                 <div class="amount-row">
                     <div>
-                        <label>{{ __('summary.totalAmount') }}</label>
-                        <small>{{ __('summary.currentOrderTotal') }}</small>
+                        <label>Total amount to be paid</label>
+                        <small>Current order total</small>
                     </div>
                     <strong id="modal-total">IQD 0</strong>
                 </div>
 
                 <div class="payment-input">
-                    <label for="amount-paid">{{ __('summary.amountPaid') }}</label>
+                    <label for="amount-paid">Amount paid</label>
                     <input id="amount-paid" type="number" min="0" step="1" value="0">
                 </div>
 
-                <div class="quick-amounts" aria-label="{{ __('summary.quickAmounts') }}">
-                    <button type="button" data-quick-amount="50000">{{ __('summary.q50000') }}</button>
-                    <button type="button" data-quick-amount="100000">{{ __('summary.q100000') }}</button>
-                    <button type="button" data-quick-amount="150000">{{ __('summary.q150000') }}</button>
-                    <button type="button" data-quick-amount="200000">{{ __('summary.q200000') }}</button>
+                <div class="quick-amounts" aria-label="Quick amount buttons">
+                    <button type="button" data-quick-amount="50000">IQD 50.000</button>
+                    <button type="button" data-quick-amount="100000">IQD 100.000</button>
+                    <button type="button" data-quick-amount="150000">IQD 150.000</button>
+                    <button type="button" data-quick-amount="200000">IQD 200.000</button>
                 </div>
 
                 <div class="change-row">
                     <div>
-                        <label>{{ __('summary.changeDue') }}</label>
-                        <small>{{ __('summary.amountToReturn') }}</small>
+                        <label>Change due</label>
+                        <small>Amount to return</small>
                     </div>
                     <strong id="change-due">IQD 0</strong>
                 </div>
 
                 <div class="modal-actions">
-                    <button id="save-print-receipt" class="save-print" type="button">{{ __('summary.savePrintReceipt') }}</button>
-                    <button id="save-only-receipt" class="save-only" type="button">{{ __('summary.saveOnlyReceipt') }}</button>
+                    <button id="save-print-receipt" class="save-print" type="button">Save & print receipt</button>
+                    <button id="save-only-receipt" class="save-only" type="button">Save without printing receipt</button>
                 </div>
             </div>
         </div>
@@ -1096,7 +1091,7 @@
     <script>
         (() => {
             'use strict';
-
+            
             /* ─── Utility: show toast notification ───────── */
             function showToast(type, title, subtitle = '') {
                 const container = document.getElementById('toast-container');
@@ -1157,6 +1152,7 @@
             });
 
 
+
             const getDiscountValue = (subtotal) => {
                 const rawValue = Number(discountValueElement.value || 0);
 
@@ -1174,7 +1170,7 @@
                 const total = Math.max(0, subtotal - discountValue);
                 const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
 
-                cartCountElement.textContent = `${totalItems} {{ __('dashboard.items') }}`;
+                cartCountElement.textContent = `${totalItems} Item`;
                 subtotalElement.textContent = currency(subtotal);
                 totalAmountElement.textContent = currency(total);
                 modalTotalElement.textContent = currency(total);
@@ -1194,7 +1190,7 @@
                             <h4>${item.name}</h4>
                             <small>${item.sku} | ${item.category}</small>
                             <small>${item.qty} x ${currency(item.price)} = ${currency(item.price * item.qty)}</small>
-                            <button class="remove-btn" type="button" data-remove-item>{{ __('messages.remove') }}</button>
+                            <button class="remove-btn" type="button" data-remove-item>Remove</button>
                         </div>
                         <div class="qty-controls">
                             <button class="qty-btn" type="button" data-decrease>-</button>
@@ -1306,8 +1302,8 @@
 
                     const data = await response.json();
                     if (data.success) {
-                        showToast('success', __('messages.transactionSaved'), `${__('summary.totalAmount')}: ${currency(total)}`);
-
+                        showToast('success', message || 'Payment completed', `Total: ${currency(total)}`);
+                        
                         // Clear cart
                         cart.clear();
                         discountValueElement.value = 0;
@@ -1317,11 +1313,11 @@
                         renderCart();
                         closePaymentModal();
                     } else {
-                        showToast('error', __('messages.error'), data.message || __('messages.unknownError'));
+                        showToast('error', 'Failed to save transaction', data.message || 'Unknown error');
                     }
                 } catch (err) {
                     console.error(err);
-                    showToast('error', __('messages.error'), err.message);
+                    showToast('error', 'Error saving transaction', err.message);
                 }
             };
 
@@ -1370,12 +1366,11 @@
             });
 
             savePrintReceiptButton.addEventListener('click', () => {
-                finalizePayment(__('messages.savedPrinted'));
+                finalizePayment('Payment saved and receipt printed.');
             });
 
-            saveOnlyReceiptButton?
-saveOnlyReceiptButton.addEventListener('click', () => {
-                finalizePayment(__('messages.savedOnly'));
+            saveOnlyReceiptButton.addEventListener('click', () => {
+                finalizePayment('Payment saved without printing receipt.');
             });
 
             cartItemsElement.addEventListener('click', (event) => {

@@ -512,10 +512,10 @@
 
                     <!-- Cashier profile -->
                     <div class="user-card">
-                        <div class="avatar">{{ mb_substr(auth()->user()->name ?? 'Shayda', 0, 1) }}</div>
+                        <div class="avatar">👩</div>
                         <div>
                             <small>Cashier</small>
-                            <strong>Hi {{ auth()->user()->name ?? 'Shayda' }}</strong>
+                            <strong>{{ auth()->user()->name ?? 'Hi Shayda' }}</strong>
                         </div>
                     </div>
                 </div>
