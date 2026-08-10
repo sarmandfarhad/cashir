@@ -1,0 +1,325 @@
+:root {
+    color-scheme: light;
+    --pos-bg: #f4f7fb;
+    --pos-panel: #ffffff;
+    --pos-panel-2: #f8faff;
+    --pos-soft: #edf3ff;
+    --pos-line: #dce5f1;
+    --pos-text: #172238;
+    --pos-muted: #71809a;
+    --pos-primary: #2f63d8;
+    --pos-primary-deep: #214cae;
+    --pos-primary-soft: #eaf1ff;
+    --pos-danger: #d44d56;
+    --pos-danger-soft: #fff0f1;
+    --pos-success: #1d9d67;
+    --pos-shadow: 0 16px 40px rgba(32, 54, 94, 0.08);
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --pos-bg: #09162c;
+    --pos-panel: #10213d;
+    --pos-panel-2: #132745;
+    --pos-soft: #172d4c;
+    --pos-line: #273b59;
+    --pos-text: #f1f5ff;
+    --pos-muted: #9cabc3;
+    --pos-primary: #6f9bff;
+    --pos-primary-deep: #8cb0ff;
+    --pos-primary-soft: #172f59;
+    --pos-danger: #ff7d84;
+    --pos-danger-soft: #40232c;
+    --pos-success: #55d49a;
+    --pos-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    font-family: "Instrument Sans", "Noto Sans Arabic", "Segoe UI", Arial, sans-serif;
+    background: var(--pos-bg);
+    color: var(--pos-text);
+    transition: background-color 180ms ease, color 180ms ease;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+.pos-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 218px minmax(0, 1fr);
+}
+
+.pos-shell--with-summary {
+    grid-template-columns: 218px minmax(0, 1fr) 326px;
+}
+
+.pos-sidebar {
+    position: sticky;
+    inset-block-start: 0;
+    height: 100vh;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 14px;
+    background: var(--pos-panel);
+    border-inline-end: 1px solid var(--pos-line);
+}
+
+.pos-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 48px;
+    padding: 4px 8px 16px;
+    color: var(--pos-text);
+    text-decoration: none;
+    border-block-end: 1px solid var(--pos-line);
+}
+
+.pos-brand__mark {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pos-primary), var(--pos-primary-deep));
+}
+
+.pos-brand__mark svg {
+    width: 19px;
+    height: 19px;
+}
+
+.pos-brand strong,
+.pos-brand small,
+.pos-operator strong,
+.pos-operator small {
+    display: block;
+}
+
+.pos-brand strong {
+    font-size: 13px;
+}
+
+.pos-brand small,
+.pos-operator small {
+    margin-block-start: 2px;
+    color: var(--pos-muted);
+    font-size: 10px;
+}
+
+.pos-nav {
+    display: grid;
+    gap: 7px;
+    padding-block-start: 18px;
+}
+
+.pos-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    color: var(--pos-text);
+    text-decoration: none;
+    font-size: 12px;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.pos-nav a:hover,
+.pos-nav a.is-active {
+    color: var(--pos-primary);
+    background: var(--pos-primary-soft);
+}
+
+.pos-nav a.is-active {
+    font-weight: 700;
+}
+
+.pos-nav a > span {
+    width: 18px;
+    text-align: center;
+}
+
+.pos-preferences {
+    display: grid;
+    gap: 8px;
+    margin-block-start: 24px;
+    padding-block-start: 16px;
+    border-block-start: 1px solid var(--pos-line);
+}
+
+.pos-preferences__label {
+    color: var(--pos-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.segmented-control {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 9px;
+    background: var(--pos-soft);
+}
+
+.segmented-control form {
+    flex: 1;
+    display: flex;
+}
+
+.segmented-control button {
+    flex: 1;
+    min-height: 29px;
+    border: 0;
+    border-radius: 7px;
+    color: var(--pos-muted);
+    background: transparent;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.segmented-control button.is-active {
+    color: var(--pos-primary);
+    background: var(--pos-panel);
+    box-shadow: 0 2px 8px rgba(30, 54, 94, 0.1);
+}
+
+.pos-sidebar__footer {
+    display: grid;
+    gap: 10px;
+    margin-block-start: auto;
+    padding-block-start: 14px;
+    border-block-start: 1px solid var(--pos-line);
+}
+
+.pos-operator {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 7px;
+}
+
+.pos-operator__avatar {
+    width: 31px;
+    height: 31px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pos-primary), #7d62db);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.pos-operator strong {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.pos-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 37px;
+    padding: 8px 11px;
+    border: 0;
+    border-radius: 8px;
+    color: var(--pos-danger);
+    background: transparent;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.pos-logout:hover {
+    background: var(--pos-danger-soft);
+}
+
+.pos-main {
+    min-width: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--pos-primary) 6%, transparent), transparent 28%),
+        var(--pos-bg);
+}
+
+html[dir="rtl"] .pos-logout > span {
+    transform: scaleX(-1);
+}
+
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="tel"],
+html[dir="rtl"] input[type="number"] {
+    direction: ltr;
+    text-align: start;
+}
+
+@media (max-width: 1180px) {
+    .pos-shell,
+    .pos-shell--with-summary {
+        grid-template-columns: 190px minmax(0, 1fr);
+    }
+
+    .pos-shell--with-summary > :last-child {
+        grid-column: 2;
+    }
+}
+
+@media (max-width: 760px) {
+    .pos-shell,
+    .pos-shell--with-summary {
+        display: block;
+    }
+
+    .pos-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        padding: 10px 12px;
+        border-inline-end: 0;
+        border-block-end: 1px solid var(--pos-line);
+    }
+
+    .pos-brand {
+        padding-block-end: 10px;
+    }
+
+    .pos-nav {
+        display: flex;
+        overflow-x: auto;
+        padding-block-start: 10px;
+    }
+
+    .pos-nav a {
+        flex: 0 0 auto;
+    }
+
+    .pos-preferences,
+    .pos-sidebar__footer {
+        display: none;
+    }
+}

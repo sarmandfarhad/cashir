@@ -1,164 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Inventory Management</title>
-    <style>
+@extends('layouts.pos', ['activeNav' => 'inventory'])
+
+@section('title', __('inventory.title').' · '.__('brand.name'))
+@section('body-class', 'inventory-page')
+@section('main-class', 'inventory-workspace')
+
+@push('styles')
+<style>
+        .inventory-page {
+            --bg: var(--pos-bg);
+            --panel: var(--pos-panel);
+            --line: var(--pos-line);
+            --text: var(--pos-text);
+            --muted: var(--pos-muted);
+            --blue: var(--pos-primary);
+            --blue-deep: var(--pos-primary-deep);
+            --blue-soft: var(--pos-primary-soft);
+            --red: var(--pos-danger);
+            --amber: #d59b18;
+            --green: var(--pos-success);
+            --shadow-sm: var(--pos-shadow);
+            --shadow-md: var(--pos-shadow);
+            --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.28);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        .inventory-page input,
+        .inventory-page select,
+        .inventory-page button {
+            color: var(--pos-text);
+        }
+
+        html[data-theme="dark"] .inventory-page :is(.btn, .modal, .modal-close, .form-group input, .category-select, .variant-chip, .qty-input-wrap, .added-variants-container, .ap-panel, .ap-panel-close, .var-counter-btn, .toast) {
+            background-color: var(--pos-panel);
+        }
+
+        html[data-theme="dark"] .inventory-page :is(th, .wizard-header-steps, .variant-builder, .qty-input-wrap button) {
+            background-color: var(--pos-panel-2);
+        }
+
         /* ── Design Tokens ─────────────────────────────── */
-        :root {
-            --bg:          #f3f6fb;
-            --panel:       #ffffff;
-            --line:        #dbe3ef;
-            --text:        #182235;
-            --muted:       #71809a;
-            --blue:        #315fd1;
-            --blue-deep:   #2448a6;
-            --blue-soft:   #eef4ff;
-            --red:         #cb4d4d;
-            --amber:       #d59b18;
-            --green:       #1f9d66;
-            --shadow-sm:   0 4px 12px rgba(18,36,74,0.07);
-            --shadow-md:   0 16px 36px rgba(18,36,74,0.1);
-            --shadow-lg:   0 24px 60px rgba(18,36,74,0.18);
-            --radius-sm:   8px;
-            --radius-md:   12px;
-            --radius-lg:   16px;
-        }
-
-        /* ── Reset ─────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        /* ── Layout ─────────────────────────────────────── */
-        .app {
-            min-height: 100vh;
-            display: grid;
-            grid-template-columns: 240px minmax(0, 1fr);
-        }
-
-        /* ── Sidebar ─────────────────────────────────────── */
-        .sidebar {
-            background: var(--panel);
-            border-right: 1px solid var(--line);
-            padding: 18px 14px;
-            display: flex;
-            flex-direction: column;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 10px 16px;
-            border-bottom: 1px solid #edf2fb;
-        }
-        .brand-mark {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--blue), var(--blue-deep));
-            color: #fff;
-            display: grid;
-            place-items: center;
-            font-size: 14px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        .brand-copy strong { display: block; font-size: 14px; line-height: 1.2; }
-        .brand-copy span   { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-        .nav { display: grid; gap: 4px; padding: 16px 2px 0; }
-        .nav a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text);
-            font-size: 13px;
-            border-radius: 10px;
-            padding: 10px 14px;
-            transition: background 0.15s, color 0.15s;
-        }
-        .nav a:hover   { background: #f4f7fe; }
-        .nav a.active  { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
-        .nav .icon     { width: 18px; text-align: center; opacity: 0.85; }
-
-        .sidebar-footer {
-            margin-top: auto;
-            border-top: 1px solid #edf2fb;
-            padding-top: 14px;
-        }
-        .logout {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 0;
-            background: transparent;
-            color: var(--red);
-            font-size: 13px;
-            padding: 10px 14px;
-            cursor: pointer;
-            width: 100%;
-            border-radius: 10px;
-            transition: background 0.15s;
-        }
-        .logout:hover { background: #fff5f5; }
-
         /* ── Main Content ─────────────────────────────── */
-        .main { padding: 24px; }
+        .inventory-workspace { padding: 24px; font-size: 13px; line-height: 1.5; }
         .topbar {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-block-end: 16px;
         }
         .title h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
-        .title p  { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+        .title p  { margin: 4px 0 0; font-size: 13px; color: var(--pos-muted); }
 
         .actions { display: flex; gap: 10px; align-items: center; }
         .btn {
-            border: 1px solid var(--line);
-            background: #fff;
+            border: 1px solid var(--pos-line);
+            background: var(--pos-panel);
             border-radius: 10px;
             min-height: 38px;
             padding: 0 16px;
             font-size: 13px;
             font-weight: 600;
-            color: var(--text);
+            color: var(--pos-text);
             cursor: pointer;
             transition: background 0.15s, border-color 0.15s;
         }
-        .btn:hover { background: #f4f7fe; }
+        .btn:hover { background: var(--pos-panel-2); }
         .btn.primary {
-            background: var(--blue);
-            border-color: var(--blue);
+            background: var(--pos-primary);
+            border-color: var(--pos-primary);
             color: #fff;
             box-shadow: 0 4px 14px rgba(49,95,209,0.25);
         }
-        .btn.primary:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
+        .btn.primary:hover { background: var(--pos-primary-deep); border-color: var(--pos-primary-deep); }
 
         /* ── Alert ─────────────────────────────────── */
         .alert {
             border: 1px solid #f3df9e;
-            background: #fff9e6;
+            background: var(--pos-panel)9e6;
             color: #8b6412;
             border-radius: 10px;
             padding: 10px 14px;
             font-size: 12px;
-            margin-bottom: 16px;
+            margin-block-end: 16px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -166,40 +91,40 @@
 
         /* ── Table Card ─────────────────────────────── */
         .table-card {
-            background: var(--panel);
-            border: 1px solid var(--line);
+            background: var(--pos-panel);
+            border: 1px solid var(--pos-line);
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--pos-shadow);
             overflow: hidden;
         }
         .toolbar {
             padding: 12px 14px;
-            border-bottom: 1px solid var(--line);
+            border-block-end: 1px solid var(--pos-line);
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
         .toolbar select, .toolbar input[type="search"] {
             min-height: 36px;
-            border: 1px solid var(--line);
+            border: 1px solid var(--pos-line);
             border-radius: var(--radius-sm);
             padding: 0 12px;
             font-size: 12px;
-            color: var(--text);
+            color: var(--pos-text);
             outline: 0;
             transition: border-color 0.15s;
         }
-        .toolbar select:focus, .toolbar input[type="search"]:focus { border-color: var(--blue); }
+        .toolbar select:focus, .toolbar input[type="search"]:focus { border-color: var(--pos-primary); }
         .toolbar input[type="search"] { flex: 1; min-width: 220px; }
 
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid #edf2fb; white-space: nowrap; }
-        th { background: #f9fbff; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        th, td { text-align: start; padding: 11px 14px; border-block-end: 1px solid var(--pos-line); white-space: nowrap; }
+        th { background: var(--pos-panel-2); font-size: 11px; color: var(--pos-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
         tbody tr { cursor: pointer; transition: background 0.12s; }
-        tbody tr:hover { background: #f4f8ff; }
-        tbody tr:last-child td { border-bottom: none; }
-        .stock-low { color: var(--red); font-weight: 700; }
-        .action-link { color: var(--blue); text-decoration: none; font-weight: 700; }
+        tbody tr:hover { background: var(--pos-panel-2); }
+        tbody tr:last-child td { border-block-end: none; }
+        .stock-low { color: var(--pos-danger); font-weight: 700; }
+        .action-link { color: var(--pos-primary); text-decoration: none; font-weight: 700; }
 
         /* ══════════════════════════════════════════════
            ADD PRODUCT MODAL
@@ -222,7 +147,7 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
         .modal {
-            background: #fff;
+            background: var(--pos-panel);
             border-radius: var(--radius-lg);
             width: min(560px, calc(100vw - 32px));
             max-height: 92vh;
@@ -239,58 +164,58 @@
             justify-content: space-between;
             gap: 10px;
             padding: 20px 22px 16px;
-            border-bottom: 1px solid var(--line);
+            border-block-end: 1px solid var(--pos-line);
         }
         .modal-header h2 { margin: 0; font-size: 17px; font-weight: 700; }
         .modal-close {
             width: 32px;
             height: 32px;
-            border: 1px solid var(--line);
-            background: #fff;
+            border: 1px solid var(--pos-line);
+            background: var(--pos-panel);
             border-radius: 50%;
             font-size: 16px;
-            color: var(--muted);
+            color: var(--pos-muted);
             cursor: pointer;
             display: grid;
             place-items: center;
             line-height: 1;
             transition: background 0.15s, color 0.15s;
         }
-        .modal-close:hover { background: var(--line); color: var(--text); }
+        .modal-close:hover { background: var(--pos-line); color: var(--pos-text); }
 
         /* Modal Body */
         .modal-body { padding: 16px 20px 4px; }
         .modal-subtitle {
             font-size: 12px;
-            color: var(--blue);
+            color: var(--pos-primary);
             font-weight: 600;
             margin: 0 0 16px;
         }
 
         /* Form Elements */
-        .form-group { display: grid; gap: 5px; margin-bottom: 14px; }
+        .form-group { display: grid; gap: 5px; margin-block-end: 14px; }
         .form-group label {
             font-size: 12px;
             font-weight: 600;
-            color: var(--text);
+            color: var(--pos-text);
         }
-        .form-group.required label::after { content: ' *'; color: var(--red); }
+        .form-group.required label::after { content: ' *'; color: var(--pos-danger); }
         .form-group input[type="text"],
         .form-group input[type="number"] {
             min-height: 40px;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: var(--radius-sm);
             padding: 0 12px;
             font-size: 13px;
-            color: var(--text);
+            color: var(--pos-text);
             outline: 0;
             transition: border-color 0.15s, box-shadow 0.15s;
-            background: #fff;
+            background: var(--pos-panel);
             width: 100%;
             min-width: 0;
         }
         .form-group input:focus {
-            border-color: var(--blue);
+            border-color: var(--pos-primary);
             box-shadow: 0 0 0 3px rgba(49,95,209,0.10);
         }
         .form-group input::placeholder { color: #a8b5c8; }
@@ -305,7 +230,7 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: #f6f9ff;
+            background: var(--pos-panel-2);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -313,21 +238,21 @@
             gap: 6px;
             min-height: 155px;
         }
-        .image-upload-area:hover { border-color: var(--blue); background: var(--blue-soft); }
-        .image-upload-area.has-image { border-style: solid; border-color: var(--line); padding: 8px; background: #fff; }
+        .image-upload-area:hover { border-color: var(--pos-primary); background: var(--pos-primary-soft); }
+        .image-upload-area.has-image { border-style: solid; border-color: var(--pos-line); padding: 8px; background: var(--pos-panel); }
         .upload-icon-wrap {
             width: 42px;
             height: 42px;
             border-radius: 50%;
             border: 1.5px solid #c8d6ed;
-            background: #fff;
+            background: var(--pos-panel);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            color: var(--muted);
+            color: var(--pos-muted);
         }
-        .upload-label { font-size: 11px; color: var(--muted); font-weight: 500; line-height: 1.4; }
+        .upload-label { font-size: 11px; color: var(--pos-muted); font-weight: 500; line-height: 1.4; }
         .image-preview { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; display: none; }
         .image-preview.show { display: block; }
         #product-image-input { display: none; }
@@ -339,32 +264,32 @@
             gap: 8px;
             width: 100%;
             min-height: 40px;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: var(--radius-sm);
             padding: 0 12px;
             font-size: 13px;
-            color: var(--muted);
-            background: #fff;
+            color: var(--pos-muted);
+            background: var(--pos-panel);
             cursor: pointer;
-            text-align: left;
+            text-align: start;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
         .trigger-btn:hover, .trigger-btn:focus {
-            border-color: var(--blue);
+            border-color: var(--pos-primary);
             box-shadow: 0 0 0 3px rgba(49,95,209,0.10);
             outline: 0;
         }
-        .trigger-btn.has-value { color: var(--text); font-weight: 500; }
+        .trigger-btn.has-value { color: var(--pos-text); font-weight: 500; }
         .trigger-btn .t-label { flex: 1; }
         .trigger-btn .t-badge {
-            background: var(--blue);
+            background: var(--pos-primary);
             color: #fff;
             border-radius: 20px;
             padding: 2px 9px;
             font-size: 10px;
             font-weight: 700;
         }
-        .trigger-btn .t-arrow { color: #a0aec0; font-size: 10px; flex-shrink: 0; margin-left: auto; }
+        .trigger-btn .t-arrow { color: #a0aec0; font-size: 10px; flex-shrink: 0; margin-inline-start: auto; }
 
         /* Variants row (minus + trigger) */
         .variants-row { display: flex; gap: 8px; align-items: center; }
@@ -372,10 +297,10 @@
             width: 40px;
             height: 40px;
             flex-shrink: 0;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: var(--radius-sm);
-            background: #fff;
-            color: var(--text);
+            background: var(--pos-panel);
+            color: var(--pos-text);
             font-size: 20px;
             display: flex;
             align-items: center;
@@ -384,7 +309,7 @@
             line-height: 1;
             transition: background 0.15s, border-color 0.15s;
         }
-        .var-reset-btn:hover { background: #f4f7fe; border-color: var(--blue); }
+        .var-reset-btn:hover { background: var(--pos-panel-2); border-color: var(--pos-primary); }
 
         /* Modal Footer */
         .modal-footer {
@@ -392,8 +317,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             padding: 14px 20px;
-            border-top: 1px solid var(--line);
-            margin-top: 6px;
+            border-block-start: 1px solid var(--pos-line);
+            margin-block-start: 6px;
         }
         .modal-footer button {
             min-height: 44px;
@@ -405,17 +330,17 @@
             border: 0;
         }
         .modal-footer .btn-cancel {
-            background: #fff;
-            border: 1.5px solid var(--line);
-            color: var(--blue);
+            background: var(--pos-panel);
+            border: 1.5px solid var(--pos-line);
+            color: var(--pos-primary);
         }
-        .modal-footer .btn-cancel:hover { background: #f4f7fe; }
+        .modal-footer .btn-cancel:hover { background: var(--pos-panel-2); }
         .modal-footer .btn-save {
-            background: var(--blue);
+            background: var(--pos-primary);
             color: #fff;
             box-shadow: 0 4px 14px rgba(49,95,209,0.28);
         }
-        .modal-footer .btn-save:hover { background: var(--blue-deep); }
+        .modal-footer .btn-save:hover { background: var(--pos-primary-deep); }
         .modal-footer .btn-save:disabled {
             opacity: 0.55;
             cursor: not-allowed;
@@ -428,11 +353,11 @@
             width: 16px;
             height: 16px;
             border: 2px solid rgba(255,255,255,0.4);
-            border-top-color: #fff;
+            border-block-start-color: #fff;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
             vertical-align: middle;
-            margin-right: 6px;
+            margin-inline-end: 6px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -449,8 +374,8 @@
 
         .ap-panel {
             position: fixed;
-            background: #fff;
-            border: 1px solid var(--line);
+            background: var(--pos-panel);
+            border: 1px solid var(--pos-line);
             border-radius: 14px;
             box-shadow: var(--shadow-lg);
             z-index: 201;
@@ -465,43 +390,43 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 6px;
+            margin-block-end: 6px;
         }
         .ap-panel-header h4 { margin: 0; font-size: 15px; font-weight: 700; }
         .ap-panel-close {
             width: 28px;
             height: 28px;
-            border: 1px solid var(--line);
-            background: #fff;
+            border: 1px solid var(--pos-line);
+            background: var(--pos-panel);
             border-radius: 50%;
             font-size: 14px;
             cursor: pointer;
             display: grid;
             place-items: center;
-            color: var(--muted);
+            color: var(--pos-muted);
             transition: background 0.12s;
         }
-        .ap-panel-close:hover { background: var(--line); }
-        .ap-panel-subtitle { margin: 0 0 12px; font-size: 11px; color: var(--muted); }
+        .ap-panel-close:hover { background: var(--pos-line); }
+        .ap-panel-subtitle { margin: 0 0 12px; font-size: 11px; color: var(--pos-muted); }
 
         /* ── Category Panel ──────────────────── */
         .cat-search-wrap {
             display: flex;
             align-items: center;
             gap: 8px;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: 8px;
             padding: 7px 10px;
-            margin-bottom: 12px;
+            margin-block-end: 12px;
             transition: border-color 0.15s;
         }
-        .cat-search-wrap:focus-within { border-color: var(--blue); }
-        .cat-search-wrap span { color: var(--muted); font-size: 14px; }
+        .cat-search-wrap:focus-within { border-color: var(--pos-primary); }
+        .cat-search-wrap span { color: var(--pos-muted); font-size: 14px; }
         .cat-search-wrap input {
             border: 0;
             outline: 0;
             font-size: 12px;
-            color: var(--text);
+            color: var(--pos-text);
             width: 100%;
             background: transparent;
         }
@@ -511,7 +436,7 @@
             gap: 2px;
             max-height: 230px;
             overflow-y: auto;
-            margin-bottom: 12px;
+            margin-block-end: 12px;
         }
         .cat-option {
             display: flex;
@@ -523,9 +448,9 @@
             font-size: 13px;
             transition: background 0.1s;
         }
-        .cat-option:hover { background: var(--blue-soft); }
+        .cat-option:hover { background: var(--pos-primary-soft); }
         .cat-option input[type="radio"] {
-            accent-color: var(--blue);
+            accent-color: var(--pos-primary);
             width: 16px;
             height: 16px;
             cursor: pointer;
@@ -534,7 +459,7 @@
         .panel-action-btn {
             width: 100%;
             min-height: 38px;
-            background: var(--blue);
+            background: var(--pos-primary);
             color: #fff;
             border: 0;
             border-radius: 8px;
@@ -543,22 +468,22 @@
             cursor: pointer;
             transition: background 0.15s;
         }
-        .panel-action-btn:hover { background: var(--blue-deep); }
+        .panel-action-btn:hover { background: var(--pos-primary-deep); }
 
         /* ── Variants Panel ──────────────────── */
         .var-section-label {
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--text);
+            margin-block-end: 10px;
+            color: var(--pos-text);
         }
         .var-size-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-block-end: 10px;
         }
-        .var-size-hint { font-size: 12px; color: var(--muted); }
+        .var-size-hint { font-size: 12px; color: var(--pos-muted); }
         .var-counter {
             display: flex;
             align-items: center;
@@ -567,29 +492,29 @@
         .var-counter-btn {
             width: 30px;
             height: 30px;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: 50%;
-            background: #fff;
+            background: var(--pos-panel);
             font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             font-weight: 700;
-            color: var(--text);
+            color: var(--pos-text);
             transition: all 0.12s;
         }
-        .var-counter-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-soft); }
+        .var-counter-btn:hover { border-color: var(--pos-primary); color: var(--pos-primary); background: var(--pos-primary-soft); }
         .var-counter-num { font-size: 15px; font-weight: 700; min-width: 22px; text-align: center; }
 
         .var-sizes-preview {
-            background: var(--blue-soft);
+            background: var(--pos-primary-soft);
             border-radius: 8px;
             padding: 8px 12px;
             font-size: 11px;
-            color: var(--blue);
+            color: var(--pos-primary);
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-block-end: 16px;
             text-align: center;
         }
 
@@ -597,7 +522,7 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin-bottom: 16px;
+            margin-block-end: 16px;
         }
         .color-item {
             display: flex;
@@ -616,7 +541,7 @@
             outline: 2px solid rgba(0,0,0,0.07);
         }
         .color-swatch:hover { transform: scale(1.1); }
-        .color-swatch.selected { border-color: var(--blue); outline-color: transparent; }
+        .color-swatch.selected { border-color: var(--pos-primary); outline-color: transparent; }
         .color-swatch.selected::after {
             content: '✓';
             position: absolute;
@@ -629,22 +554,22 @@
             font-weight: 800;
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
-        .color-name { font-size: 10px; color: var(--muted); font-weight: 500; }
+        .color-name { font-size: 10px; color: var(--pos-muted); font-weight: 500; }
 
         .var-summary-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--blue-soft);
+            background: var(--pos-primary-soft);
             border-radius: 8px;
             padding: 9px 12px;
             font-size: 12px;
-            color: var(--blue);
+            color: var(--pos-primary);
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-block-end: 12px;
         }
         .var-summary-badge {
-            background: var(--blue);
+            background: var(--pos-primary);
             color: #fff;
             border-radius: 20px;
             padding: 2px 10px;
@@ -655,8 +580,8 @@
         /* ── Toast Notification ─────────────────── */
         .toast-container {
             position: fixed;
-            bottom: 28px;
-            right: 28px;
+            inset-block-end: 28px;
+            inset-inline-end: 28px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -666,21 +591,21 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            background: #fff;
-            border: 1px solid var(--line);
+            background: var(--pos-panel);
+            border: 1px solid var(--pos-line);
             border-radius: 12px;
             padding: 14px 18px;
             font-size: 13px;
             font-weight: 600;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--pos-shadow);
             min-width: 260px;
             animation: slideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .toast.success { border-left: 4px solid var(--green); }
-        .toast.error   { border-left: 4px solid var(--red); }
+        .toast.success { border-inline-start: 4px solid var(--pos-success); }
+        .toast.error   { border-inline-start: 4px solid var(--pos-danger); }
         .toast-icon    { font-size: 20px; flex-shrink: 0; }
         .toast p       { margin: 0; }
-        .toast span    { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px; }
+        .toast span    { display: block; font-size: 11px; color: var(--pos-muted); font-weight: 400; margin-block-start: 1px; }
 
         /* ── Multi-Step Wizard Styles ───────────── */
         .wizard-step {
@@ -692,9 +617,9 @@
         .wizard-header-steps {
             display: flex;
             align-items: center;
-            background: #f8fafc;
+            background: var(--pos-panel-2);
             padding: 12px 22px;
-            border-bottom: 1px solid var(--line);
+            border-block-end: 1px solid var(--pos-line);
             font-size: 12px;
             font-weight: 600;
             gap: 0;
@@ -703,21 +628,21 @@
             display: flex;
             align-items: center;
             gap: 7px;
-            color: var(--muted);
+            color: var(--pos-muted);
             white-space: nowrap;
         }
         .wizard-header-step.active {
-            color: var(--blue);
+            color: var(--pos-primary);
         }
         .wizard-header-step.done {
-            color: var(--green);
+            color: var(--pos-success);
         }
         .wizard-header-step .num {
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            background: var(--line);
-            color: var(--muted);
+            background: var(--pos-line);
+            color: var(--pos-muted);
             display: grid;
             place-items: center;
             font-size: 10px;
@@ -726,11 +651,11 @@
             transition: background 0.2s;
         }
         .wizard-header-step.active .num {
-            background: var(--blue);
+            background: var(--pos-primary);
             color: #fff;
         }
         .wizard-header-step.done .num {
-            background: var(--green);
+            background: var(--pos-success);
             color: #fff;
             font-size: 0; /* hide the number, show SVG instead */
         }
@@ -744,14 +669,14 @@
         .wizard-sep {
             flex: 1;
             height: 1.5px;
-            background: var(--line);
+            background: var(--pos-line);
             margin: 0 10px;
         }
         .wizard-sep.active {
-            background: var(--blue);
+            background: var(--pos-primary);
         }
         .wizard-sep.done {
-            background: var(--green);
+            background: var(--pos-success);
         }
 
         /* Step 1 two-column layout */
@@ -772,21 +697,21 @@
         /* Category Select */
         .category-select {
             min-height: 40px;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: var(--radius-sm);
             padding: 0 12px;
             font-size: 13px;
-            color: var(--muted);
-            background: #fff;
+            color: var(--pos-muted);
+            background: var(--pos-panel);
             outline: 0;
             width: 100%;
             cursor: pointer;
             transition: border-color 0.15s;
             appearance: auto;
         }
-        .category-select.has-value { color: var(--text); }
+        .category-select.has-value { color: var(--pos-text); }
         .category-select:focus {
-            border-color: var(--blue);
+            border-color: var(--pos-primary);
             box-shadow: 0 0 0 3px rgba(49,95,209,0.10);
         }
 
@@ -807,11 +732,11 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background: #fafbfc;
-            border: 1px solid var(--line);
+            background: var(--pos-panel-2);
+            border: 1px solid var(--pos-line);
             border-radius: 8px;
             padding: 14px;
-            margin-bottom: 14px;
+            margin-block-end: 14px;
         }
         .variant-chips {
             display: flex;
@@ -819,8 +744,8 @@
             gap: 6px;
         }
         .variant-chip {
-            border: 1px solid var(--line);
-            background: #fff;
+            border: 1px solid var(--pos-line);
+            background: var(--pos-panel);
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
@@ -829,12 +754,12 @@
             transition: all 0.15s;
         }
         .variant-chip:hover {
-            border-color: var(--blue);
-            color: var(--blue);
+            border-color: var(--pos-primary);
+            color: var(--pos-primary);
         }
         .variant-chip.selected {
-            background: var(--blue);
-            border-color: var(--blue);
+            background: var(--pos-primary);
+            border-color: var(--pos-primary);
             color: #fff;
         }
         .color-grid-wizard {
@@ -861,13 +786,13 @@
             transform: scale(1.15);
         }
         .color-dot-wrap.selected .color-dot {
-            border-color: var(--blue);
+            border-color: var(--pos-primary);
             outline-color: transparent;
             transform: scale(1.15);
         }
         .color-dot-name {
             font-size: 9px;
-            color: var(--muted);
+            color: var(--pos-muted);
             font-weight: 500;
         }
         .qty-row {
@@ -875,16 +800,16 @@
             align-items: flex-end;
             justify-content: space-between;
             gap: 12px;
-            border-top: 1px solid #f1f5f9;
-            padding-top: 12px;
-            margin-top: 4px;
+            border-block-start: 1px solid #f1f5f9;
+            padding-block-start: 12px;
+            margin-block-start: 4px;
         }
         .qty-input-wrap {
             display: flex;
             align-items: center;
-            border: 1.5px solid var(--line);
+            border: 1.5px solid var(--pos-line);
             border-radius: 6px;
-            background: #fff;
+            background: var(--pos-panel);
             overflow: hidden;
             width: 120px;
         }
@@ -892,14 +817,14 @@
             width: 32px;
             height: 32px;
             border: 0;
-            background: #f1f5f9;
-            color: var(--text);
+            background: var(--pos-panel-2);
+            color: var(--pos-text);
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
         }
         .qty-input-wrap button:hover {
-            background: #e2e8f0;
+            background: var(--pos-soft);
         }
         .qty-input-wrap input {
             flex: 1;
@@ -913,8 +838,8 @@
             height: 32px;
         }
         .add-variant-btn {
-            background: var(--blue-soft);
-            color: var(--blue);
+            background: var(--pos-primary-soft);
+            color: var(--pos-primary);
             border: 1px solid rgba(49,95,209,0.2);
             border-radius: 6px;
             padding: 8px 16px;
@@ -929,29 +854,29 @@
             height: 34px;
         }
         .add-variant-btn:hover {
-            background: var(--blue);
+            background: var(--pos-primary);
             color: #fff;
         }
 
         /* Added Variants List */
         .added-variants-container {
-            border: 1px solid var(--line);
+            border: 1px solid var(--pos-line);
             border-radius: 8px;
-            background: #fff;
+            background: var(--pos-panel);
             max-height: 150px;
             overflow-y: auto;
-            margin-bottom: 12px;
+            margin-block-end: 12px;
         }
         .added-variant-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 8px 12px;
-            border-bottom: 1px solid #f1f5f9;
+            border-block-end: 1px solid var(--pos-line);
             font-size: 12px;
         }
         .added-variant-row:last-child {
-            border-bottom: 0;
+            border-block-end: 0;
         }
         .added-variant-info {
             display: flex;
@@ -967,8 +892,8 @@
         }
         .added-variant-qty {
             font-weight: 700;
-            color: var(--blue);
-            background: var(--blue-soft);
+            color: var(--pos-primary);
+            background: var(--pos-primary-soft);
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 11px;
@@ -976,7 +901,7 @@
         .remove-variant-btn {
             background: transparent;
             border: 0;
-            color: var(--red);
+            color: var(--pos-danger);
             font-size: 16px;
             cursor: pointer;
             padding: 4px;
@@ -1002,7 +927,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 16px;
+            margin-block-end: 16px;
         }
         .review-hero-ring::before {
             content: '';
@@ -1020,7 +945,7 @@
             width: 72px;
             height: 72px;
             border-radius: 50%;
-            background: var(--green);
+            background: var(--pos-success);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1039,12 +964,12 @@
             border-radius: 50%;
             animation: sparkle-fade 2s ease-in-out infinite;
         }
-        .sparkle.s1 { background: #f5c518; top: 6px;  left: 18px; animation-delay: 0s; }
-        .sparkle.s2 { background: #315fd1; top: 12px; right: 12px; width:5px; height:5px; animation-delay: 0.3s; }
-        .sparkle.s3 { background: #1f9d66; bottom: 8px; right: 20px; animation-delay: 0.6s; }
-        .sparkle.s4 { background: #cb4d4d; bottom: 14px; left: 14px; width:5px; height:5px; animation-delay: 0.9s; }
-        .sparkle.s5 { background: #f5c518; top: 40px; left: 4px;  width:4px; height:4px; animation-delay: 0.45s; }
-        .sparkle.s6 { background: #315fd1; top: 38px; right: 4px; width:4px; height:4px; animation-delay: 0.75s; }
+        .sparkle.s1 { background: #f5c518; inset-block-start: 6px;  inset-inline-start: 18px; animation-delay: 0s; }
+        .sparkle.s2 { background: #315fd1; inset-block-start: 12px; inset-inline-end: 12px; width:5px; height:5px; animation-delay: 0.3s; }
+        .sparkle.s3 { background: #1f9d66; inset-block-end: 8px; inset-inline-end: 20px; animation-delay: 0.6s; }
+        .sparkle.s4 { background: #cb4d4d; inset-block-end: 14px; inset-inline-start: 14px; width:5px; height:5px; animation-delay: 0.9s; }
+        .sparkle.s5 { background: #f5c518; inset-block-start: 40px; inset-inline-start: 4px;  width:4px; height:4px; animation-delay: 0.45s; }
+        .sparkle.s6 { background: #315fd1; inset-block-start: 38px; inset-inline-end: 4px; width:4px; height:4px; animation-delay: 0.75s; }
         @keyframes sparkle-fade {
             0%, 100% { opacity: 1;   transform: scale(1); }
             50%       { opacity: 0.3; transform: scale(0.5); }
@@ -1053,18 +978,18 @@
             margin: 0 0 6px;
             font-size: 20px;
             font-weight: 800;
-            color: var(--text);
+            color: var(--pos-text);
             letter-spacing: -0.01em;
         }
         .review-hero-sub {
             margin: 0;
             font-size: 13px;
-            color: var(--muted);
+            color: var(--pos-muted);
             line-height: 1.6;
         }
         /* Summary table */
         .review-table {
-            border: 1px solid var(--line);
+            border: 1px solid var(--pos-line);
             border-radius: 10px;
             overflow: hidden;
             margin: 0 0 4px;
@@ -1072,23 +997,23 @@
         .review-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            border-bottom: 1px solid #f1f5f9;
+            border-block-end: 1px solid var(--pos-line);
             font-size: 13px;
         }
         .review-label {
             padding: 11px 16px;
-            color: var(--muted);
+            color: var(--pos-muted);
             font-weight: 500;
-            border-right: 1px solid #f1f5f9;
+            border-inline-end: 1px solid var(--pos-line);
         }
         .review-value {
             padding: 11px 16px;
             font-weight: 700;
-            color: var(--text);
+            color: var(--pos-text);
         }
         /* Save Product button (green) */
         .btn-save-product {
-            background: var(--green);
+            background: var(--pos-success);
             color: #fff;
             border: 0;
             border-radius: 10px;
@@ -1105,50 +1030,18 @@
         }
         .btn-save-product:hover { background: #178054; }
         .btn-save-product:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
-    </style>
-</head>
-<body>
-<div class="app">
+</style>
+@endpush
 
-    <!-- ── Sidebar ───────────────────────────── -->
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-mark">P</div>
-            <div class="brand-copy">
-                <strong>Pos System</strong>
-                <span>System Cashier</span>
-            </div>
-        </div>
-
-        <nav class="nav" aria-label="Sidebar navigation">
-            <a href="{{ route('dashboard') }}"><span class="icon">▣</span><span>POS / Cashier</span></a>
-            <a class="active" href="{{ route('inventory.index') }}"><span class="icon">▥</span><span>Inventory Management</span></a>
-            <a href="{{ route('sales.index') }}"><span class="icon">◷</span><span>Sales Menu</span></a>
-            <a href="{{ route('dashboard') }}"><span class="icon">▤</span><span>Dashboard</span></a>
-            <a href="{{ route('dashboard') }}"><span class="icon">⚙</span><span>Setting</span></a>
-        </nav>
-
-        <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="logout" type="submit">
-                    <span class="icon">⇦</span>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
-    </aside>
-
-    <!-- ── Main ──────────────────────────────── -->
-    <main class="main">
+@section('content')
         <div class="topbar">
             <div class="title">
-                <h1>Product List</h1>
-                <p>Manage Products &amp; Inventory</p>
+                <h1>{{ __('inventory.productList') }}</h1>
+                <p>{{ __('inventory.manageProducts') }}</p>
             </div>
             <div class="actions">
-                <button class="btn" type="button">Export PDF</button>
-                <button class="btn primary" type="button" id="add-product-btn">+ Add Product</button>
+                <button class="btn" type="button">{{ __('inventory.exportPdf') }}</button>
+                <button class="btn primary" type="button" id="add-product-btn">+ {{ __('inventory.addProduct') }}</button>
             </div>
         </div>
 
@@ -1160,14 +1053,14 @@
         @endphp
         @if ($lowStockCount > 0)
             <div class="alert">
-                ⚠️ {{ $lowStockCount }} product{{ $lowStockCount > 1 ? 's are' : ' is' }} below minimum stock level
+                ⚠️ {{ __('inventory.lowStockAlert', ['count' => $lowStockCount]) }}
             </div>
         @endif
 
         <section class="table-card">
             <div class="toolbar">
-                <select id="category-filter" aria-label="Filter by category">
-                    <option value="all">All categories</option>
+                <select id="category-filter" aria-label="{{ __('inventory.filterByCategory') }}">
+                    <option value="all">{{ __('inventory.allCategories') }}</option>
                     @php
                         $cats = array_unique(array_column($products, 'category'));
                     @endphp
@@ -1175,20 +1068,20 @@
                         <option value="{{ strtolower($cat) }}">{{ $cat }}</option>
                     @endforeach
                 </select>
-                <input id="inventory-search" type="search" placeholder="Search product name or code…" aria-label="Search products">
+                <input id="inventory-search" type="search" placeholder="{{ __('inventory.searchPlaceholder') }}" aria-label="{{ __('inventory.searchProducts') }}">
             </div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>Product Name</th>
-                        <th>Category</th>
-                        <th>Variants</th>
-                        <th>Stock</th>
-                        <th>Min. Stock</th>
-                        <th>Price</th>
-                        <th>Action</th>
+                        <th>{{ __('inventory.productCode') }}</th>
+                        <th>{{ __('inventory.productName') }}</th>
+                        <th>{{ __('inventory.category') }}</th>
+                        <th>{{ __('inventory.variants') }}</th>
+                        <th>{{ __('inventory.stock') }}</th>
+                        <th>{{ __('inventory.minStock') }}</th>
+                        <th>{{ __('inventory.price') }}</th>
+                        <th>{{ __('inventory.action') }}</th>
                     </tr>
                 </thead>
                 <tbody id="inventory-tbody">
@@ -1209,66 +1102,66 @@
                             <td>{{ $product['min_stock'] }}</td>
                             <td>IQD {{ number_format($product['price'], 0, '.', ',') }}</td>
                             <td onclick="event.stopPropagation()">
-                                <a class="action-link" href="{{ route('inventory.show', $product['code']) }}">Open</a>
+                                <a class="action-link" href="{{ route('inventory.show', $product['code']) }}">{{ __('inventory.open') }}</a>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </section>
-    </main>
-</div>
+@endsection
 
 <!-- ══════════════════════════════════════════════
      ADD PRODUCT WIZARD MODAL
 ══════════════════════════════════════════════ -->
+@section('overlays')
 <div id="add-product-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
         <!-- Header -->
         <div class="modal-header">
-            <h2 id="modal-title">Add New Product</h2>
-            <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close">×</button>
+            <h2 id="modal-title">{{ __('inventory.addNewProduct') }}</h2>
+            <button type="button" class="modal-close" id="modal-close-btn" aria-label="{{ __('messages.close') }}">×</button>
         </div>
 
         <!-- Step indicators in header -->
         <div class="wizard-header-steps">
             <div class="wizard-header-step active" id="step-1-header">
                 <span class="num">1</span>
-                <span>basic info</span>
+                <span>{{ __('inventory.basicInfo') }}</span>
             </div>
             <div class="wizard-sep" id="step-sep-1"></div>
             <div class="wizard-header-step" id="step-2-header">
                 <span class="num">2</span>
-                <span>Variants</span>
+                <span>{{ __('inventory.variants') }}</span>
             </div>
             <div class="wizard-sep" id="step-sep-2"></div>
             <div class="wizard-header-step" id="step-3-header">
                 <span class="num">3</span>
-                <span>Review</span>
+                <span>{{ __('inventory.review') }}</span>
             </div>
         </div>
 
         <form id="add-product-form" novalidate>
-            <div class="modal-body" style="padding-top: 14px;">
+            <div class="modal-body" style="padding-block-start: 14px;">
                 
                 <!-- ── STEP 1: Basic Info ── -->
                 <div class="wizard-step active" id="wizard-step-1">
-                    <p class="modal-subtitle">Enter basic product details</p>
+                    <p class="modal-subtitle">{{ __('inventory.enterBasicDetails') }}</p>
                     
                     <div class="step1-layout">
                         <!-- Left: Product Image -->
                         <div class="step1-left">
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label>Product Image</label>
+                            <div class="form-group" style="margin-block-end:0;">
+                                <label>{{ __('inventory.image') }}</label>
                                 <div class="image-upload-area" id="image-upload-area" role="button" tabindex="0"
                                      onclick="document.getElementById('product-image-input').click()"
                                      onkeydown="if(event.key==='Enter')this.click()">
-                                    <img id="image-preview" class="image-preview" alt="Product preview" />
+                                    <img id="image-preview" class="image-preview" alt="{{ __('inventory.productPreview') }}" />
                                     <div id="upload-placeholder">
                                         <div class="upload-icon-wrap">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                                         </div>
-                                        <div class="upload-label">upload Image<br><span style="font-size:10px;">IPG . PNG .(Max 2MB)</span></div>
+                                        <div class="upload-label">{{ __('inventory.uploadImage') }}<br><span style="font-size:10px;">{{ __('inventory.imageRequirements') }}</span></div>
                                     </div>
                                 </div>
                                 <input id="product-image-input" type="file" name="image" accept="image/*">
@@ -1279,30 +1172,30 @@
                         <div class="step1-right">
                             <!-- Product Name -->
                             <div class="form-group required">
-                                <label for="product-name">Product Name <span style="color:var(--red);">*</span></label>
-                                <input id="product-name" type="text" name="name" placeholder="e.g T-shirt" required autocomplete="off">
+                                <label for="product-name">{{ __('inventory.productName') }} <span style="color:var(--pos-danger);">*</span></label>
+                                <input id="product-name" type="text" name="name" placeholder="{{ __('inventory.productNameExample') }}" required autocomplete="off">
                             </div>
 
                             <!-- Product Code -->
                             <div class="form-group">
-                                <label for="product-code">Product Code</label>
+                                <label for="product-code">{{ __('inventory.productCode') }}</label>
                                 <input id="product-code" type="text" name="code" readonly style="background:#f8fafc; cursor:not-allowed;" placeholder="TS-001">
                             </div>
 
                             <!-- Barcode -->
                             <div class="form-group">
-                                <label for="product-barcode">Barcode (optional)</label>
-                                <input id="product-barcode" type="text" name="barcode" placeholder="e.g 0000000000" autocomplete="off">
+                                <label for="product-barcode">{{ __('inventory.barcodeOptional') }}</label>
+                                <input id="product-barcode" type="text" name="barcode" placeholder="{{ __('inventory.barcodeExample') }}" autocomplete="off">
                             </div>
 
                             <!-- Stock + Price -->
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="product-min-stock">Stock</label>
+                                    <label for="product-min-stock">{{ __('inventory.stock') }}</label>
                                     <input id="product-min-stock" type="number" name="min_stock" value="0" min="0" placeholder="0">
                                 </div>
                                 <div class="form-group required">
-                                    <label for="product-price">Price (IQD) <span style="color:var(--red);">*</span></label>
+                                    <label for="product-price">{{ __('inventory.priceIqd') }} <span style="color:var(--pos-danger);">*</span></label>
                                     <input id="product-price" type="number" name="price" placeholder="IQD 00.000" min="0" required>
                                 </div>
                             </div>
@@ -1310,29 +1203,23 @@
                     </div>
 
                     <!-- Category — full width below -->
-                    <div class="form-group" style="margin-top: 14px; margin-bottom: 0;">
-                        <label for="product-category">Select product categorie</label>
+                    <div class="form-group" style="margin-block-start: 14px; margin-block-end: 0;">
+                        <label for="product-category">{{ __('inventory.selectCategory') }}</label>
                         <select id="product-category" name="category" required class="category-select">
-                            <option value="" disabled selected>Select</option>
-                            <option value="T-Shirt">T-Shirt</option>
-                            <option value="Shirt">Shirt</option>
-                            <option value="Pants">Pants</option>
-                            <option value="Jeans">Jeans</option>
-                            <option value="Jacket">Jacket</option>
-                            <option value="Hoodie">Hoodie</option>
-                            <option value="Shorts">Shorts</option>
-                            <option value="Accessories">Accessories</option>
-                            <option value="Polo shirt">Polo shirt</option>
+                            <option value="" disabled selected>{{ __('inventory.select') }}</option>
+                            @foreach (['T-Shirt', 'Shirt', 'Pants', 'Jeans', 'Jacket', 'Hoodie', 'Shorts', 'Accessories', 'Polo shirt'] as $category)
+                                <option value="{{ $category }}">{{ $category }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
 
                 <!-- ── STEP 2: Variants & Stock ── -->
                 <div class="wizard-step" id="wizard-step-2">
-                    <p class="modal-subtitle">Configure variants &amp; stock levels</p>
+                    <p class="modal-subtitle">{{ __('inventory.configureVariants') }}</p>
                     
                     <div class="variant-builder">
-                        <label style="font-size: 11px; font-weight: 700; color: var(--text);">1. Select Size</label>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--pos-text);">1. {{ __('inventory.selectSize') }}</label>
                         <div class="variant-chips" id="wizard-sizes">
                             <span class="variant-chip" data-size="S">S</span>
                             <span class="variant-chip" data-size="M">M</span>
@@ -1340,10 +1227,10 @@
                             <span class="variant-chip" data-size="XL">XL</span>
                             <span class="variant-chip" data-size="XXL">XXL</span>
                             <span class="variant-chip" data-size="3XL">3XL</span>
-                            <span class="variant-chip" data-size="Free Size">Free Size</span>
+                            <span class="variant-chip" data-size="Free Size">{{ __('inventory.freeSize') }}</span>
                         </div>
                         
-                        <label style="font-size: 11px; font-weight: 700; color: var(--text); margin-top: 4px;">2. Select Color</label>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--pos-text); margin-block-start: 4px;">2. {{ __('inventory.selectColor') }}</label>
                         <div class="color-grid-wizard" id="wizard-colors">
                             @php
                                 $colorSwatches = [
@@ -1371,28 +1258,28 @@
                         
                         <div class="qty-row">
                             <div>
-                                <label style="font-size: 11px; font-weight: 700; color: var(--text);">3. Stock Quantity</label>
-                                <div class="qty-input-wrap" style="margin-top: 4px;">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--pos-text);">3. {{ __('inventory.stockQuantity') }}</label>
+                                <div class="qty-input-wrap" style="margin-block-start: 4px;">
                                     <button type="button" id="wizard-qty-dec">−</button>
                                     <input type="number" id="wizard-qty-input" value="10" min="1">
                                     <button type="button" id="wizard-qty-inc">+</button>
                                 </div>
                             </div>
                             <button type="button" class="add-variant-btn" id="wizard-add-variant-btn">
-                                <span>+ Add Variant</span>
+                                <span>+ {{ __('inventory.addVariant') }}</span>
                             </button>
                         </div>
                     </div>
                     
-                    <label style="font-size: 12px; font-weight: 700; color: var(--text); display: block; margin-bottom: 6px;">Added Combinations</label>
+                    <label style="font-size: 12px; font-weight: 700; color: var(--pos-text); display: block; margin-block-end: 6px;">{{ __('inventory.addedCombinations') }}</label>
                     <div class="added-variants-container" id="added-variants-list">
-                        <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 12px;">No combinations added yet.</div>
+                        <div style="padding: 16px; text-align: center; color: var(--pos-muted); font-size: 12px;">{{ __('inventory.noCombinations') }}</div>
                     </div>
 
                     <!-- Summary Row -->
-                    <div class="var-summary-row" style="margin-top: 10px; margin-bottom: 0;">
-                        <span id="var-summary-text">0 Stock · 0 Variants</span>
-                        <span class="var-summary-badge" id="var-summary-badge">Total Qty: 0</span>
+                    <div class="var-summary-row" style="margin-block-start: 10px; margin-block-end: 0;">
+                        <span id="var-summary-text">{{ __('inventory.variantSummary', ['stock' => 0, 'sizes' => 0, 'colors' => 0]) }}</span>
+                        <span class="var-summary-badge" id="var-summary-badge">{{ __('inventory.totalQuantity', ['count' => 0]) }}</span>
                     </div>
 
                     <!-- Hidden inputs to submit standard payload to server -->
@@ -1416,38 +1303,38 @@
                             <span class="sparkle s5"></span>
                             <span class="sparkle s6"></span>
                         </div>
-                        <h3 class="review-hero-title">Product Ready!</h3>
-                        <p class="review-hero-sub">Review the information before<br>saving the product.</p>
+                        <h3 class="review-hero-title">{{ __('inventory.productReady') }}</h3>
+                        <p class="review-hero-sub">{{ __('inventory.reviewBeforeSaving') }}</p>
                     </div>
 
                     <!-- Summary Table -->
                     <div class="review-table">
                         <div class="review-row">
-                            <span class="review-label">Product Name</span>
+                            <span class="review-label">{{ __('inventory.productName') }}</span>
                             <span class="review-value" id="rv-name">—</span>
                         </div>
                         <div class="review-row">
-                            <span class="review-label">Product Code</span>
+                            <span class="review-label">{{ __('inventory.productCode') }}</span>
                             <span class="review-value" id="rv-code">—</span>
                         </div>
                         <div class="review-row">
-                            <span class="review-label">Sizes</span>
+                            <span class="review-label">{{ __('inventory.sizes') }}</span>
                             <span class="review-value" id="rv-sizes">—</span>
                         </div>
                         <div class="review-row">
-                            <span class="review-label">Colors</span>
+                            <span class="review-label">{{ __('inventory.colors') }}</span>
                             <span class="review-value" id="rv-colors">—</span>
                         </div>
                         <div class="review-row">
-                            <span class="review-label">Total Variants</span>
+                            <span class="review-label">{{ __('inventory.totalVariants') }}</span>
                             <span class="review-value" id="rv-variants">—</span>
                         </div>
                         <div class="review-row">
-                            <span class="review-label">Total Stock</span>
+                            <span class="review-label">{{ __('inventory.totalStock') }}</span>
                             <span class="review-value" id="rv-stock">—</span>
                         </div>
-                        <div class="review-row" style="border-bottom:0;">
-                            <span class="review-label">Price (IQD)</span>
+                        <div class="review-row" style="border-block-end:0;">
+                            <span class="review-label">{{ __('inventory.priceIqd') }}</span>
                             <span class="review-value" id="rv-price">—</span>
                         </div>
                     </div>
@@ -1456,10 +1343,10 @@
 
             <!-- Footer Actions -->
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" id="wizard-back-btn">Cancel</button>
+                <button type="button" class="btn-cancel" id="wizard-back-btn">{{ __('messages.cancel') }}</button>
                 <button type="button" class="btn-save" id="wizard-next-btn">
                     <span class="btn-next-arrow">
-                        Next
+                        {{ __('inventory.next') }}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg>
                     </span>
                 </button>
@@ -1470,12 +1357,50 @@
 
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
+@endsection
 
 <!-- ══════════════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════════════ -->
+@push('scripts')
 <script>
 'use strict';
+
+const strings = {
+    next: @json(__('inventory.next')),
+    cancel: @json(__('messages.cancel')),
+    back: @json(__('inventory.back')),
+    save: @json(__('messages.save')),
+    saveProduct: @json(__('inventory.saveProduct')),
+    saving: @json(__('inventory.saving')),
+    open: @json(__('inventory.open')),
+    validationError: @json(__('inventory.validationError')),
+    nameRequired: @json(__('inventory.nameRequired')),
+    validPriceRequired: @json(__('inventory.validPriceRequired')),
+    categoryRequired: @json(__('inventory.categoryRequired')),
+    variantRequired: @json(__('inventory.variantRequired')),
+    selectSize: @json(__('inventory.selectSize')),
+    selectSizeFirst: @json(__('inventory.selectSizeFirst')),
+    selectColor: @json(__('inventory.selectColor')),
+    selectColorFirst: @json(__('inventory.selectColorFirst')),
+    invalidQuantity: @json(__('inventory.invalidQuantity')),
+    validQuantityRequired: @json(__('inventory.validQuantityRequired')),
+    noCombinations: @json(__('inventory.noCombinations')),
+    stock: @json(__('inventory.stock')),
+    sizes: @json(__('inventory.sizes')),
+    colors: @json(__('inventory.colors')),
+    variants: @json(__('inventory.variants')),
+    totalQuantity: @json(__('inventory.totalQuantity')),
+    size: @json(__('inventory.size')),
+    color: @json(__('inventory.color')),
+    items: @json(__('sales.items')),
+    addSuccess: @json(__('inventory.addSuccess')),
+    liveInPos: @json(__('inventory.liveInPos')),
+    addFailed: @json(__('inventory.addFailed')),
+    checkRequired: @json(__('inventory.checkRequired')),
+    networkError: @json(__('inventory.networkError')),
+};
+const locale = @json(app()->getLocale() === 'ar' ? 'ar-IQ' : 'en-US');
 
 /* ─── Utility: show toast notification ───────── */
 function showToast(type, title, subtitle = '') {
@@ -1498,7 +1423,7 @@ function showToast(type, title, subtitle = '') {
 
 /* ─── Format currency IQD ─────────────────────── */
 function formatIQD(amount) {
-    return 'IQD ' + Number(amount).toLocaleString('en-US');
+    return 'IQD ' + Number(amount).toLocaleString(locale);
 }
 
 /* ══════════════════════════════════════════════
@@ -1574,8 +1499,8 @@ const backBtn     = document.getElementById('wizard-back-btn');
 const nextBtn     = document.getElementById('wizard-next-btn');
 
 function setNextLabel(label) {
-    if (label === 'Next') {
-        nextBtn.innerHTML = `<span class="btn-next-arrow">Next <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg></span>`;
+    if (label === strings.next) {
+        nextBtn.innerHTML = `<span class="btn-next-arrow">${strings.next} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg></span>`;
     } else {
         nextBtn.textContent = label;
     }
@@ -1597,7 +1522,7 @@ function populateReview() {
     document.getElementById('rv-colors').textContent  = uniqueColors.length ? `${uniqueColors.length}(${uniqueColors.join(',')})` : '—';
     document.getElementById('rv-variants').textContent = totalVariants;
     document.getElementById('rv-stock').textContent   = totalStock;
-    document.getElementById('rv-price').textContent   = 'IQD ' + price.toLocaleString('en-US');
+    document.getElementById('rv-price').textContent   = 'IQD ' + price.toLocaleString(locale);
 }
 
 function showStep(step) {
@@ -1614,16 +1539,16 @@ function showStep(step) {
     if (step === 1) {
         wizardStep1.classList.add('active');
         step1Header.classList.add('active');
-        backBtn.textContent = 'Cancel';
-        setNextLabel('Next');
+        backBtn.textContent = strings.cancel;
+        setNextLabel(strings.next);
         nextBtn.className = 'btn-save';
     } else if (step === 2) {
         wizardStep2.classList.add('active');
         step1Header.classList.add('done');
         step2Header.classList.add('active');
         stepSep1.classList.add('active');
-        backBtn.textContent = 'Back';
-        setNextLabel('Next');
+        backBtn.textContent = strings.back;
+        setNextLabel(strings.next);
         nextBtn.className = 'btn-save';
     } else if (step === 3) {
         if (wizardStep3) wizardStep3.classList.add('active');
@@ -1632,12 +1557,12 @@ function showStep(step) {
         step3Header.classList.add('active');
         stepSep1.classList.add('done');
         stepSep2.classList.add('active');
-        backBtn.textContent = 'Back';
+        backBtn.textContent = strings.back;
         // Swap button to green Save Product
         nextBtn.className = 'btn-save-product';
         nextBtn.innerHTML = `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 13l4 4L19 7"/></svg>
-            Save Product
+            ${strings.saveProduct}
         `;
         populateReview();
     }
@@ -1672,17 +1597,17 @@ function validateStep1() {
     const price = document.getElementById('product-price').value.trim();
 
     if (!name) {
-        showToast('error', 'Validation error', 'Product name is required.');
+        showToast('error', strings.validationError, strings.nameRequired);
         document.getElementById('product-name').focus();
         return false;
     }
     if (!price || parseFloat(price) < 0) {
-        showToast('error', 'Validation error', 'Please enter a valid price.');
+        showToast('error', strings.validationError, strings.validPriceRequired);
         document.getElementById('product-price').focus();
         return false;
     }
     if (!category) {
-        showToast('error', 'Validation error', 'Please select a category.');
+        showToast('error', strings.validationError, strings.categoryRequired);
         document.getElementById('product-category').focus();
         return false;
     }
@@ -1697,7 +1622,7 @@ nextBtn.addEventListener('click', (e) => {
         }
     } else if (currentStep === 2) {
         if (addedVariants.length === 0) {
-            showToast('error', 'Validation error', 'Please add at least one size & color variant combination.');
+            showToast('error', strings.validationError, strings.variantRequired);
             return;
         }
         showStep(3);
@@ -1765,16 +1690,16 @@ document.getElementById('wizard-qty-inc').addEventListener('click', () => {
 const addVariantBtn = document.getElementById('wizard-add-variant-btn');
 addVariantBtn.addEventListener('click', () => {
     if (!selectedSize) {
-        showToast('error', 'Select Size', 'Please select a size first.');
+        showToast('error', strings.selectSize, strings.selectSizeFirst);
         return;
     }
     if (!selectedColor) {
-        showToast('error', 'Select Color', 'Please select a color first.');
+        showToast('error', strings.selectColor, strings.selectColorFirst);
         return;
     }
     const qty = parseInt(qtyInput.value, 10) || 0;
     if (qty <= 0) {
-        showToast('error', 'Invalid Quantity', 'Please enter a valid stock quantity.');
+        showToast('error', strings.invalidQuantity, strings.validQuantityRequired);
         return;
     }
 
@@ -1799,9 +1724,9 @@ function updateVariantsList() {
     container.innerHTML = '';
 
     if (addedVariants.length === 0) {
-        container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--muted); font-size: 12px;">No combinations added yet.</div>`;
-        document.getElementById('var-summary-text').textContent = '0 Stock · 0 Variants';
-        document.getElementById('var-summary-badge').textContent = 'Total Qty: 0';
+        container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--pos-muted); font-size: 12px;">${strings.noCombinations}</div>`;
+        document.getElementById('var-summary-text').textContent = `0 ${strings.stock} · 0 ${strings.variants}`;
+        document.getElementById('var-summary-badge').textContent = strings.totalQuantity.replace(':count', '0');
         return;
     }
 
@@ -1819,18 +1744,18 @@ function updateVariantsList() {
         row.innerHTML = `
             <div class="added-variant-info">
                 <span class="added-variant-color-dot" style="background:${v.colorHex}"></span>
-                <span>Size: <strong>${v.size}</strong> · Color: <strong>${v.color}</strong></span>
+                <span>${strings.size}: <strong>${v.size}</strong> · ${strings.color}: <strong>${v.color}</strong></span>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <span class="added-variant-qty">${v.qty} items</span>
+                <span class="added-variant-qty">${v.qty} ${strings.items}</span>
                 <button type="button" class="remove-variant-btn" onclick="removeVariant(${index})">×</button>
             </div>
         `;
         container.appendChild(row);
     });
 
-    document.getElementById('var-summary-text').textContent = `${totalStock} Stock · ${uniqueSizes.size} Sizes · ${uniqueColors.size} Colors`;
-    document.getElementById('var-summary-badge').textContent = `Total Qty: ${totalStock}`;
+    document.getElementById('var-summary-text').textContent = `${totalStock} ${strings.stock} · ${uniqueSizes.size} ${strings.sizes} · ${uniqueColors.size} ${strings.colors}`;
+    document.getElementById('var-summary-badge').textContent = strings.totalQuantity.replace(':count', totalStock);
 }
 
 window.removeVariant = function(index) {
@@ -1871,17 +1796,17 @@ addProductForm.addEventListener('submit', async (e) => {
     const variants = document.getElementById('product-variants').value;
 
     if (!category.trim()) {
-        showToast('error', 'Category required', 'Please select a category for this product.');
+        showToast('error', strings.validationError, strings.categoryRequired);
         return;
     }
     if (!variants.trim()) {
-        showToast('error', 'Variants required', 'Please select size and color variants.');
+        showToast('error', strings.validationError, strings.variantRequired);
         return;
     }
 
     const submitBtn = document.getElementById('wizard-next-btn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="btn-spinner"></span>Saving…';
+    submitBtn.innerHTML = `<span class="btn-spinner"></span>${strings.saving}`;
 
     const formData = new FormData(addProductForm);
 
@@ -1919,7 +1844,7 @@ addProductForm.addEventListener('submit', async (e) => {
                 <td>${product.min_stock}</td>
                 <td>${formatIQD(price)}</td>
                 <td onclick="event.stopPropagation()">
-                    <a class="action-link" href="/inventory-management/${product.code}">Open</a>
+                    <a class="action-link" href="/inventory-management/${product.code}">${strings.open}</a>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1937,19 +1862,19 @@ addProductForm.addEventListener('submit', async (e) => {
             closeAddModal();
             showToast(
                 'success',
-                `"${product.name}" added successfully!`,
-                'Product is now live in Inventory & POS Cashier.'
+                strings.addSuccess.replace(':product', product.name),
+                strings.liveInPos
             );
         } else {
-            showToast('error', 'Failed to add product.', 'Please check all required fields.');
+            showToast('error', strings.addFailed, strings.checkRequired);
         }
 
     } catch (err) {
         console.error('[AddProduct]', err);
-        showToast('error', 'Network error.', err.message);
+        showToast('error', strings.networkError, err.message);
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Save';
+        submitBtn.textContent = strings.save;
     }
 });
 
@@ -1983,5 +1908,4 @@ addProductForm.addEventListener('submit', async (e) => {
     categoryFilter.addEventListener('change', applyFilters);
 })();
 </script>
-</body>
-</html>
+@endpush

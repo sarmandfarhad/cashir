@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApplyUserPreferences;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,18 +14,20 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->web(append: [
+            ApplyUserPreferences::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();
 
 if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
     $storagePath = '/tmp/storage';
     $app->useStoragePath($storagePath);
-    
+
     // Override bootstrap/cache path
     $app->useBootstrapPath('/tmp/bootstrap');
 
@@ -35,11 +38,11 @@ if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
         "{$storagePath}/framework/testing",
         "{$storagePath}/framework/views",
         "{$storagePath}/logs",
-        "/tmp/bootstrap/cache"
+        '/tmp/bootstrap/cache',
     ];
 
     foreach ($directories as $dir) {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             @mkdir($dir, 0777, true);
         }
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -142,17 +143,16 @@ $defaultTransactions = [
 $getAllProducts = function () use ($inventoryProducts) {
     $sessionProducts = session('products', []);
     $allProducts = array_merge($inventoryProducts, $sessionProducts);
-    
+
     $deductions = session('stock_deductions', []);
     foreach ($allProducts as &$product) {
         if (isset($deductions[$product['code']])) {
             $product['stock'] = max(0, $product['stock'] - $deductions[$product['code']]);
         }
     }
-    
+
     return $allProducts;
 };
-
 
 Route::get('/', function () {
     return view('auth.login');
@@ -165,13 +165,48 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::post('/preferences/locale', function (Request $request) {
+    $validated = $request->validate([
+        'locale' => ['required', 'string', 'in:en,ar'],
+    ]);
+
+    $request->session()->put('locale', $validated['locale']);
+    app()->setLocale($validated['locale']);
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'success' => true,
+            'locale' => $validated['locale'],
+        ]);
+    }
+
+    return back();
+})->name('preferences.locale');
+
+Route::post('/preferences/theme', function (Request $request) {
+    $validated = $request->validate([
+        'theme' => ['required', 'string', 'in:light,dark'],
+    ]);
+
+    $request->session()->put('theme', $validated['theme']);
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'success' => true,
+            'theme' => $validated['theme'],
+        ]);
+    }
+
+    return back();
+})->name('preferences.theme');
+
 Route::get('/dashboard', function () use ($getAllProducts) {
     return view('dashboard', [
         'products' => $getAllProducts(),
     ]);
 })->middleware('auth')->name('dashboard');
 
-Route::post('/inventory-management/add', function () use ($getAllProducts) {
+Route::post('/inventory-management/add', function () {
     $validated = request()->validate([
         'name' => 'required|string',
         'code' => 'required|string',
@@ -186,9 +221,9 @@ Route::post('/inventory-management/add', function () use ($getAllProducts) {
     $imagePath = '';
     if (request()->hasFile('image')) {
         $image = request()->file('image');
-        $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $filename = time().'_'.uniqid().'.'.$image->getClientOriginalExtension();
         $image->move(public_path('images/products'), $filename);
-        $imagePath = '/images/products/' . $filename;
+        $imagePath = '/images/products/'.$filename;
     }
 
     $newProduct = [
@@ -234,33 +269,33 @@ Route::get('/inventory-management/{code}', function (string $code) use ($getAllP
     } else {
         // Dynamically build matrix using product variants & stock (e.g. from session/added products)
         $variantsStr = $product['variants'] ?? ''; // e.g. "4 S + 3 C" or "S - M - L | Black"
-        
+
         $sizes = ['S', 'M', 'L', 'XL'];
         $colors = ['Black', 'White', 'Blue'];
 
         // Try parsing size count and color count from variants string e.g. "4 S + 3 C"
         if (preg_match('/(\d+)\s*S\s*\+\s*(\d+)\s*C/i', $variantsStr, $matches)) {
-            $numSizes = (int)$matches[1];
-            $numColors = (int)$matches[2];
-            
+            $numSizes = (int) $matches[1];
+            $numColors = (int) $matches[2];
+
             // Standard size options to select from
             $allSizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
             $sizes = array_slice($allSizes, 0, $numSizes);
-            
+
             $allColors = ['Black', 'White', 'Blue', 'Navy', 'Gray', 'Red', 'Green'];
             $colors = array_slice($allColors, 0, $numColors);
         }
 
-        $stock = (int)($product['stock'] ?? 0);
+        $stock = (int) ($product['stock'] ?? 0);
         $numRows = count($sizes);
         $numCols = count($colors);
         $totalCells = $numRows * $numCols;
-        
+
         $matrix = [];
         if ($totalCells > 0) {
             $baseVal = floor($stock / $totalCells);
             $remainder = $stock % $totalCells;
-            
+
             foreach ($sizes as $rIndex => $sizeName) {
                 $row = [];
                 for ($cIndex = 0; $cIndex < $numCols; $cIndex++) {
@@ -269,7 +304,7 @@ Route::get('/inventory-management/{code}', function (string $code) use ($getAllP
                         $val += 1;
                         $remainder--;
                     }
-                    $row[] = (int)$val;
+                    $row[] = (int) $val;
                 }
                 $matrix[$sizeName] = $row;
             }
@@ -278,7 +313,7 @@ Route::get('/inventory-management/{code}', function (string $code) use ($getAllP
         $detail = [
             'sizes' => $sizes,
             'colors' => $colors,
-            'matrix' => $matrix
+            'matrix' => $matrix,
         ];
     }
 
@@ -290,6 +325,7 @@ Route::get('/inventory-management/{code}', function (string $code) use ($getAllP
 
 $getAllTransactions = function () use ($defaultTransactions) {
     $sessionTransactions = session('transactions', []);
+
     return array_merge($defaultTransactions, $sessionTransactions);
 };
 
@@ -301,23 +337,70 @@ Route::get('/sales-menu', function () use ($getAllTransactions) {
 
 Route::post('/sales-menu/save', function () use ($getAllTransactions) {
     $validated = request()->validate([
-        'total_items' => 'required|integer|min:1',
-        'total_payment' => 'required|numeric|min:0',
-        'payment_method' => 'required|string|in:cash,card,Cash,Card',
-        'items' => 'nullable|array'
+        'total_items' => ['required', 'integer', 'min:1'],
+        'subtotal' => ['nullable', 'numeric', 'min:0'],
+        'discount' => ['nullable', 'numeric', 'min:0'],
+        'total_payment' => ['required', 'numeric', 'min:0'],
+        'amount_paid' => ['nullable', 'numeric', 'gte:total_payment'],
+        'change_due' => ['nullable', 'numeric', 'min:0'],
+        'payment_method' => ['required', 'string', 'in:cash,card,mobile_pay'],
+        'items' => ['nullable', 'array'],
+        'items.*.sku' => ['required_with:items', 'string', 'max:100'],
+        'items.*.name' => ['nullable', 'string', 'max:255'],
+        'items.*.price' => ['nullable', 'numeric', 'min:0'],
+        'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
+        'receipt' => ['nullable', 'array'],
+        'receipt.printed' => ['nullable', 'boolean'],
+        'receipt.notes' => ['nullable', 'string', 'max:1000'],
     ]);
 
     $allTransactions = $getAllTransactions();
     $nextIdNum = count($allTransactions) + 1;
-    $id = 'TRX-2026-' . str_pad($nextIdNum, 3, '0', STR_PAD_LEFT);
+    $id = 'TRX-2026-'.str_pad($nextIdNum, 3, '0', STR_PAD_LEFT);
+    $issuedAt = now()->timezone('Asia/Baghdad');
+    $discount = (float) ($validated['discount'] ?? 0);
+    $totalPayment = (float) $validated['total_payment'];
+    $subtotal = (float) ($validated['subtotal'] ?? ($totalPayment + $discount));
+    $amountPaid = (float) ($validated['amount_paid'] ?? $totalPayment);
+    $changeDue = max(0, $amountPaid - $totalPayment);
+    $items = array_map(
+        static fn (array $item): array => [
+            'sku' => $item['sku'],
+            'name' => $item['name'] ?? $item['sku'],
+            'price' => (float) ($item['price'] ?? 0),
+            'qty' => (int) $item['qty'],
+            'line_total' => (float) ($item['price'] ?? 0) * (int) $item['qty'],
+        ],
+        $validated['items'] ?? [],
+    );
+    $cashierName = auth()->user()->name ?? 'Cashier';
 
     $newTransaction = [
         'id' => $id,
-        'date_time' => now()->timezone('Asia/Baghdad')->format('d/m/Y H:i'),
-        'cashier_name' => auth()->user()->name ?? 'Hi Shayda',
+        'date_time' => $issuedAt->format('d/m/Y H:i'),
+        'cashier_name' => $cashierName,
         'total_items' => (int) $validated['total_items'],
-        'total_payment' => (float) $validated['total_payment'],
-        'payment_method' => strtolower($validated['payment_method']),
+        'subtotal' => $subtotal,
+        'discount' => $discount,
+        'total_payment' => $totalPayment,
+        'amount_paid' => $amountPaid,
+        'change_due' => $changeDue,
+        'payment_method' => $validated['payment_method'],
+        'items' => $items,
+        'receipt' => [
+            'number' => $id,
+            'issued_at' => $issuedAt->toIso8601String(),
+            'cashier_name' => $cashierName,
+            'printed' => (bool) ($validated['receipt']['printed'] ?? false),
+            'notes' => $validated['receipt']['notes'] ?? null,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => $totalPayment,
+            'amount_paid' => $amountPaid,
+            'change_due' => $changeDue,
+            'payment_method' => $validated['payment_method'],
+            'items' => $items,
+        ],
     ];
 
     $sessionTransactions = session('transactions', []);
@@ -325,14 +408,13 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
     session(['transactions' => $sessionTransactions]);
 
     // Store stock deductions
-    $items = request('items', []);
-    if (!empty($items)) {
+    if (! empty($items)) {
         $deductions = session('stock_deductions', []);
         foreach ($items as $item) {
-            $sku = $item['sku'] ?? null;
-            $qty = $item['qty'] ?? 0;
-            if ($sku && $qty > 0) {
-                if (!isset($deductions[$sku])) {
+            $sku = $item['sku'];
+            $qty = $item['qty'];
+            if ($qty > 0) {
+                if (! isset($deductions[$sku])) {
                     $deductions[$sku] = 0;
                 }
                 $deductions[$sku] += $qty;
@@ -343,4 +425,3 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
 
     return response()->json(['success' => true, 'transaction' => $newTransaction]);
 })->middleware('auth')->name('sales.save');
-
