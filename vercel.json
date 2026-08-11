@@ -23,7 +23,6 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_AUTO_MIGRATE": "true",
         "APP_KEY": "base64:A0+jmx7wBuUxdPoooHu4BhL8HZZ4NGDmTD3eYK43pHI=",
         "APP_URL": "https://cashir.vercel.app",
         "LOG_CHANNEL": "stderr",
