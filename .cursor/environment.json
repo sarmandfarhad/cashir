@@ -1,0 +1,14 @@
+{
+    "name": "Cashir (Laravel POS)",
+    "install": "bash .cursor/install.sh",
+    "terminals": [
+        {
+            "name": "dev",
+            "command": "composer run dev"
+        }
+    ],
+    "ports": [
+        8000,
+        5173
+    ]
+}
