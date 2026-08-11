@@ -1,9 +1,14 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 $inventoryProducts = [
     ['code' => 'TS-001', 'name' => 'Basic T-shirt', 'category' => 'T-shirt', 'variants' => '4 S + 3 C', 'stock' => 50, 'min_stock' => 20, 'price' => 25000],
@@ -144,10 +149,14 @@ $getAllProducts = function () use ($inventoryProducts) {
     $sessionProducts = session('products', []);
     $allProducts = array_merge($inventoryProducts, $sessionProducts);
 
-    $deductions = session('stock_deductions', []);
+    $deductions = SaleItem::query()
+        ->select('sku', DB::raw('SUM(quantity) as quantity_sold'))
+        ->groupBy('sku')
+        ->pluck('quantity_sold', 'sku');
+
     foreach ($allProducts as &$product) {
         if (isset($deductions[$product['code']])) {
-            $product['stock'] = max(0, $product['stock'] - $deductions[$product['code']]);
+            $product['stock'] = max(0, $product['stock'] - (int) $deductions[$product['code']]);
         }
     }
 
@@ -323,19 +332,46 @@ Route::get('/inventory-management/{code}', function (string $code) use ($getAllP
     ]);
 })->middleware('auth')->name('inventory.show');
 
-$getAllTransactions = function () use ($defaultTransactions) {
-    $sessionTransactions = session('transactions', []);
-
-    return array_merge($defaultTransactions, $sessionTransactions);
-};
-
-Route::get('/sales-menu', function () use ($getAllTransactions) {
-    return view('sales.index', [
-        'transactions' => array_reverse($getAllTransactions()),
+Route::get('/sales-menu', function (Request $request) {
+    $validated = $request->validate([
+        'date' => ['nullable', 'date_format:Y-m-d'],
     ]);
+    $selectedDate = $validated['date'] ?? now('Asia/Baghdad')->format('Y-m-d');
+    $dayStart = Carbon::createFromFormat('Y-m-d', $selectedDate, 'Asia/Baghdad')->startOfDay()->utc();
+    $dayEnd = $dayStart->copy()->addDay();
+
+    $sales = Sale::query()
+        ->with('items')
+        ->where('sold_at', '>=', $dayStart)
+        ->where('sold_at', '<', $dayEnd)
+        ->latest('sold_at')
+        ->get();
+
+    $transactions = $sales->map(fn (Sale $sale) => [
+        'id' => $sale->number,
+        'date_time' => $sale->sold_at->timezone('Asia/Baghdad')->format('d/m/Y H:i'),
+        'cashier_name' => $sale->cashier_name,
+        'total_items' => $sale->total_items,
+        'subtotal' => $sale->subtotal,
+        'discount' => $sale->discount,
+        'total_payment' => $sale->total,
+        'amount_paid' => $sale->amount_paid,
+        'change_due' => $sale->change_due,
+        'payment_method' => $sale->payment_method,
+        'note' => $sale->note,
+        'items' => $sale->items->map(fn ($item) => [
+            'sku' => $item->sku,
+            'name' => $item->name,
+            'price' => $item->price,
+            'qty' => $item->quantity,
+            'line_total' => $item->line_total,
+        ])->all(),
+    ])->all();
+
+    return view('sales.index', compact('transactions', 'selectedDate'));
 })->middleware('auth')->name('sales.index');
 
-Route::post('/sales-menu/save', function () use ($getAllTransactions) {
+Route::post('/sales-menu/save', function () use ($getAllProducts) {
     $validated = request()->validate([
         'total_items' => ['required', 'integer', 'min:1'],
         'subtotal' => ['nullable', 'numeric', 'min:0'],
@@ -347,16 +383,15 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
         'items' => ['nullable', 'array'],
         'items.*.sku' => ['required_with:items', 'string', 'max:100'],
         'items.*.name' => ['nullable', 'string', 'max:255'],
+        'items.*.category' => ['nullable', 'string', 'max:255'],
         'items.*.price' => ['nullable', 'numeric', 'min:0'],
         'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
+        'note' => ['nullable', 'string', 'max:100'],
         'receipt' => ['nullable', 'array'],
         'receipt.printed' => ['nullable', 'boolean'],
-        'receipt.notes' => ['nullable', 'string', 'max:1000'],
+        'receipt.notes' => ['nullable', 'string', 'max:100'],
     ]);
 
-    $allTransactions = $getAllTransactions();
-    $nextIdNum = count($allTransactions) + 1;
-    $id = 'TRX-2026-'.str_pad($nextIdNum, 3, '0', STR_PAD_LEFT);
     $issuedAt = now()->timezone('Asia/Baghdad');
     $discount = (float) ($validated['discount'] ?? 0);
     $totalPayment = (float) $validated['total_payment'];
@@ -367,6 +402,7 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
         static fn (array $item): array => [
             'sku' => $item['sku'],
             'name' => $item['name'] ?? $item['sku'],
+            'category' => $item['category'] ?? null,
             'price' => (float) ($item['price'] ?? 0),
             'qty' => (int) $item['qty'],
             'line_total' => (float) ($item['price'] ?? 0) * (int) $item['qty'],
@@ -375,53 +411,88 @@ Route::post('/sales-menu/save', function () use ($getAllTransactions) {
     );
     $cashierName = auth()->user()->name ?? 'Cashier';
 
-    $newTransaction = [
-        'id' => $id,
-        'date_time' => $issuedAt->format('d/m/Y H:i'),
-        'cashier_name' => $cashierName,
-        'total_items' => (int) $validated['total_items'],
-        'subtotal' => $subtotal,
-        'discount' => $discount,
-        'total_payment' => $totalPayment,
-        'amount_paid' => $amountPaid,
-        'change_due' => $changeDue,
-        'payment_method' => $validated['payment_method'],
-        'items' => $items,
-        'receipt' => [
-            'number' => $id,
-            'issued_at' => $issuedAt->toIso8601String(),
+    $availableProducts = collect($getAllProducts())->keyBy('code');
+    foreach ($items as $item) {
+        $product = $availableProducts->get($item['sku']);
+        if (! $product || $item['qty'] > (int) $product['stock']) {
+            return response()->json([
+                'message' => __('checkout.stock_limit'),
+                'errors' => ['items' => [__('checkout.stock_limit')]],
+            ], 422);
+        }
+    }
+
+    $sale = DB::transaction(function () use (
+        $amountPaid,
+        $cashierName,
+        $changeDue,
+        $discount,
+        $issuedAt,
+        $items,
+        $subtotal,
+        $totalPayment,
+        $validated,
+    ) {
+        $sale = Sale::query()->create([
+            'number' => 'TMP-'.Str::uuid(),
+            'user_id' => auth()->id(),
             'cashier_name' => $cashierName,
-            'printed' => (bool) ($validated['receipt']['printed'] ?? false),
-            'notes' => $validated['receipt']['notes'] ?? null,
+            'total_items' => (int) $validated['total_items'],
             'subtotal' => $subtotal,
             'discount' => $discount,
             'total' => $totalPayment,
             'amount_paid' => $amountPaid,
             'change_due' => $changeDue,
             'payment_method' => $validated['payment_method'],
+            'note' => $validated['note'] ?? $validated['receipt']['notes'] ?? null,
+            'receipt_printed' => (bool) ($validated['receipt']['printed'] ?? false),
+            'sold_at' => $issuedAt,
+        ]);
+
+        $sale->update([
+            'number' => 'TRX-'.$issuedAt->format('Y').'-'.str_pad((string) $sale->id, 6, '0', STR_PAD_LEFT),
+        ]);
+
+        $sale->items()->createMany(array_map(fn (array $item) => [
+            'sku' => $item['sku'],
+            'name' => $item['name'],
+            'category' => $item['category'],
+            'price' => $item['price'],
+            'quantity' => $item['qty'],
+            'line_total' => $item['line_total'],
+        ], $items));
+
+        return $sale->load('items');
+    });
+
+    $newTransaction = [
+        'id' => $sale->number,
+        'date_time' => $sale->sold_at->timezone('Asia/Baghdad')->format('d/m/Y H:i'),
+        'cashier_name' => $sale->cashier_name,
+        'total_items' => $sale->total_items,
+        'subtotal' => $sale->subtotal,
+        'discount' => $sale->discount,
+        'total_payment' => $sale->total,
+        'amount_paid' => $sale->amount_paid,
+        'change_due' => $sale->change_due,
+        'payment_method' => $sale->payment_method,
+        'note' => $sale->note,
+        'items' => $items,
+        'receipt' => [
+            'number' => $sale->number,
+            'issued_at' => $sale->sold_at->toIso8601String(),
+            'cashier_name' => $sale->cashier_name,
+            'printed' => $sale->receipt_printed,
+            'notes' => $sale->note,
+            'subtotal' => $sale->subtotal,
+            'discount' => $sale->discount,
+            'total' => $sale->total,
+            'amount_paid' => $sale->amount_paid,
+            'change_due' => $sale->change_due,
+            'payment_method' => $sale->payment_method,
             'items' => $items,
         ],
     ];
-
-    $sessionTransactions = session('transactions', []);
-    $sessionTransactions[] = $newTransaction;
-    session(['transactions' => $sessionTransactions]);
-
-    // Store stock deductions
-    if (! empty($items)) {
-        $deductions = session('stock_deductions', []);
-        foreach ($items as $item) {
-            $sku = $item['sku'];
-            $qty = $item['qty'];
-            if ($qty > 0) {
-                if (! isset($deductions[$sku])) {
-                    $deductions[$sku] = 0;
-                }
-                $deductions[$sku] += $qty;
-            }
-        }
-        session(['stock_deductions' => $deductions]);
-    }
 
     return response()->json(['success' => true, 'transaction' => $newTransaction]);
 })->middleware('auth')->name('sales.save');

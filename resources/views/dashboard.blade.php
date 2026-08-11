@@ -590,6 +590,36 @@
         gap: 5px;
     }
 
+    .receipt-note {
+        display: grid;
+        gap: 5px;
+    }
+
+    .receipt-note__label {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--pos-muted);
+        font-size: 9px;
+    }
+
+    .receipt-note textarea {
+        width: 100%;
+        min-height: 62px;
+        padding: 9px;
+        resize: vertical;
+        border: 1px solid var(--pos-line);
+        border-radius: 7px;
+        outline: 0;
+        color: var(--pos-text);
+        background: color-mix(in srgb, #fff3d9 55%, var(--pos-panel));
+        font-size: 9px;
+    }
+
+    html[data-theme="dark"] .receipt-note textarea {
+        background: var(--pos-panel-2);
+    }
+
     .quick-amounts {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -874,6 +904,13 @@
                     @endforeach
                 </div>
                 <div class="payment-highlight"><span>{{ __('payment.change_due') }}</span><strong id="change-due">IQD 0</strong></div>
+                <label class="receipt-note">
+                    <span class="receipt-note__label">
+                        <span>{{ __('payment.note_optional') }}</span>
+                        <span><span id="note-count">0</span>/100</span>
+                    </span>
+                    <textarea id="receipt-note" maxlength="100" placeholder="{{ __('payment.note_placeholder') }}"></textarea>
+                </label>
                 <p class="payment-error" id="payment-error">{{ __('payment.insufficient') }}</p>
                 <div class="payment-modal__actions">
                     <button class="save-print" id="save-print" type="button">{{ __('payment.save_print') }}</button>
@@ -903,6 +940,7 @@
             paid: @json(__('payment.amount_paid')),
             change: @json(__('payment.change_due')),
             method: @json(__('checkout.payment_method')),
+            note: @json(__('payment.note_optional')),
             thankYou: @json(__('receipt.thank_you')),
         };
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
@@ -930,6 +968,8 @@
             modalTotal: document.getElementById('modal-total'),
             paid: document.getElementById('amount-paid'),
             change: document.getElementById('change-due'),
+            note: document.getElementById('receipt-note'),
+            noteCount: document.getElementById('note-count'),
             error: document.getElementById('payment-error'),
             savePrint: document.getElementById('save-print'),
             saveOnly: document.getElementById('save-only'),
@@ -1050,10 +1090,12 @@
             const items = state.items.map((item) => `
                 <tr><td>${escapeHtml(item.name)} × ${item.qty}</td><td>${money(item.price * item.qty)}</td></tr>
             `).join('');
+            const note = elements.note.value.trim();
             printWindow.document.write(`<!doctype html><html dir="${document.documentElement.dir}"><head><title>${escapeHtml(strings.receiptTitle)}</title>
                 <style>body{font:14px Arial,sans-serif;max-width:360px;margin:24px auto;color:#111}h1{text-align:center;font-size:20px}table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px dashed #bbb}td:last-child{text-align:end}.totals{margin-top:16px;line-height:1.8}.thanks{text-align:center;margin-top:24px}</style>
                 </head><body><h1>${escapeHtml(strings.receiptTitle)}</h1><p>#${escapeHtml(transaction.id)}</p><p>${escapeHtml(strings.cashier)}: ${escapeHtml(transaction.cashier_name)}</p><table>${items}</table>
                 <div class="totals"><strong>${escapeHtml(strings.total)}: ${money(state.total)}</strong><br>${escapeHtml(strings.paid)}: ${money(paid)}<br>${escapeHtml(strings.change)}: ${money(Math.max(0, paid - state.total))}<br>${escapeHtml(strings.method)}: ${escapeHtml(paymentMethod)}</div>
+                ${note ? `<p><strong>${escapeHtml(strings.note)}:</strong> ${escapeHtml(note)}</p>` : ''}
                 <p class="thanks">${escapeHtml(strings.thankYou)}</p><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
             printWindow.document.close();
         };
@@ -1087,7 +1129,12 @@
                         amount_paid: paid,
                         change_due: Math.max(0, paid - state.total),
                         payment_method: paymentMethod,
+                        note: elements.note.value.trim() || null,
                         items: state.items,
+                        receipt: {
+                            printed: shouldPrint,
+                            notes: elements.note.value.trim() || null,
+                        },
                     }),
                 });
                 const data = await response.json();
@@ -1099,6 +1146,8 @@
                 elements.discountValue.value = 0;
                 elements.discountType.value = 'percent';
                 elements.paid.value = 0;
+                elements.note.value = '';
+                elements.noteCount.textContent = '0';
                 closeModal();
                 renderCart();
             } catch (error) {
@@ -1132,6 +1181,9 @@
             if (event.target === elements.modal) closeModal();
         });
         elements.paid.addEventListener('input', updateChange);
+        elements.note.addEventListener('input', () => {
+            elements.noteCount.textContent = String(elements.note.value.length);
+        });
         document.querySelectorAll('[data-quick-amount]').forEach((button) => button.addEventListener('click', () => {
             elements.paid.value = button.dataset.quickAmount;
             updateChange();

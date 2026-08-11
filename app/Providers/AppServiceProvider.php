@@ -23,7 +23,11 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
-        if (config('database.default') === 'sqlite' && config('database.connections.sqlite.database') === ':memory:') {
+        $usesMemoryDatabase = config('database.default') === 'sqlite'
+            && config('database.connections.sqlite.database') === ':memory:';
+        $autoMigrate = filter_var(env('APP_AUTO_MIGRATE', false), FILTER_VALIDATE_BOOL);
+
+        if ($usesMemoryDatabase || $autoMigrate) {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
 
             $users = [

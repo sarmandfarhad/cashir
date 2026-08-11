@@ -74,7 +74,13 @@
     }
     .sales-stat label { display: block; color: var(--pos-muted); font-size: 13px; }
     .sales-stat strong { display: block; margin-block-start: 4px; color: var(--pos-primary); font-size: 22px; }
-    .sales-toolbar { margin-block-end: 20px; }
+    .sales-toolbar {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        margin-block-end: 20px;
+    }
     .sales-search { position: relative; width: min(440px, 100%); }
     .sales-search span {
         position: absolute;
@@ -90,6 +96,21 @@
         border: 1px solid var(--pos-line);
         border-radius: 10px;
         outline: 0;
+        color: var(--pos-text);
+        background: var(--pos-panel);
+        box-shadow: var(--pos-shadow);
+    }
+    .sales-date {
+        display: grid;
+        gap: 5px;
+        color: var(--pos-muted);
+        font-size: 10px;
+    }
+    .sales-date input {
+        height: 38px;
+        padding-inline: 11px;
+        border: 1px solid var(--pos-line);
+        border-radius: 10px;
         color: var(--pos-text);
         background: var(--pos-panel);
         box-shadow: var(--pos-shadow);
@@ -134,6 +155,8 @@
         .sales-workspace { padding: 16px; }
         .sales-head { align-items: stretch; flex-direction: column; }
         .sales-stats { grid-template-columns: 1fr; }
+        .sales-toolbar { align-items: stretch; flex-direction: column; }
+        .sales-search { width: 100%; }
     }
 </style>
 @endpush
@@ -165,11 +188,11 @@
     <section class="sales-stats">
         <div class="sales-stat sales-stat--green">
             <div class="sales-stat__icon">🛒</div>
-            <div><label>{{ __('sales.totalTransactions') }}</label><strong>{{ count($transactions) }}</strong></div>
+            <div><label>{{ __('sales.dailyTransactions') }}</label><strong>{{ count($transactions) }}</strong></div>
         </div>
         <div class="sales-stat sales-stat--blue">
             <div class="sales-stat__icon">💵</div>
-            <div><label>{{ __('sales.totalSales') }}</label><strong>IQD {{ number_format($totalSalesAmount, 0, '.', '.') }}</strong></div>
+            <div><label>{{ __('sales.dailySales') }}</label><strong>IQD {{ number_format($totalSalesAmount, 0, '.', '.') }}</strong></div>
         </div>
     </section>
 
@@ -178,6 +201,12 @@
             <span aria-hidden="true">⌕</span>
             <input type="search" id="sales-search" placeholder="{{ __('sales.searchPlaceholder') }}" aria-label="{{ __('sales.search') }}">
         </label>
+        <form method="GET" action="{{ route('sales.index') }}">
+            <label class="sales-date">
+                <span>{{ __('sales.salesDate') }}</span>
+                <input type="date" name="date" value="{{ $selectedDate }}" onchange="this.form.submit()">
+            </label>
+        </form>
     </div>
 
     <section class="sales-table">
@@ -190,18 +219,20 @@
                     <th>{{ __('sales.totalItems') }}</th>
                     <th>{{ __('sales.totalPayment') }}</th>
                     <th>{{ __('sales.paymentMethod') }}</th>
+                    <th>{{ __('sales.note') }}</th>
                     <th>{{ __('sales.action') }}</th>
                 </tr>
             </thead>
             <tbody id="sales-tbody">
                 @forelse ($transactions as $trx)
-                    <tr data-trx-id="{{ strtolower($trx['id']) }}" data-cashier="{{ strtolower($trx['cashier_name']) }}">
+                    <tr data-trx-id="{{ strtolower($trx['id']) }}" data-cashier="{{ strtolower($trx['cashier_name']) }}" data-note="{{ strtolower($trx['note'] ?? '') }}">
                         <td class="transaction-id">{{ $trx['id'] }}</td>
                         <td>{{ $trx['date_time'] }}</td>
                         <td>{{ $trx['cashier_name'] }}</td>
                         <td>{{ $trx['total_items'] }}</td>
                         <td>IQD {{ number_format($trx['total_payment'], 0, '.', '.') }}</td>
                         <td><span class="payment-badge {{ strtolower($trx['payment_method']) }}">{{ __('payment.'.strtolower($trx['payment_method'])) }}</span></td>
+                        <td>{{ $trx['note'] ?: '—' }}</td>
                         <td>
                             <div class="sales-actions">
                                 <button class="sales-action" type="button" title="{{ __('sales.viewDetails') }}" onclick="viewDetails('{{ $trx['id'] }}')">👁</button>
@@ -210,7 +241,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="sales-empty">{{ __('sales.noTransactions') }}</td></tr>
+                    <tr><td colspan="8" class="sales-empty">{{ __('sales.noTransactionsForDate') }}</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -241,7 +272,7 @@
         const applyFilters = () => {
             const query = search.value.trim().toLowerCase();
             rows.forEach((row) => {
-                row.hidden = !!query && ![row.dataset.trxId, row.dataset.cashier].some((value) => value.includes(query));
+                row.hidden = !!query && ![row.dataset.trxId, row.dataset.cashier, row.dataset.note].some((value) => value.includes(query));
             });
         };
 
